@@ -47,14 +47,15 @@ int binary_search(KV *kv, int key) {
 
   int mid_key = lengh / 2;
 
-  KV *mid = kv;
-  int cl = 0;
+  KV *temp = kv, *mid = NULL;
+  int cl = 1;
   while (1)
   {
    if (cl == mid_key) {
+     mid = temp->next;
      break;
    }
-   mid = mid->next;
+   temp = temp->next;
    cl++;
   }
 
@@ -62,14 +63,15 @@ int binary_search(KV *kv, int key) {
     return mid->value;
   }
   
-  int is_tail = key >= mid_key;
+  int is_tail = key > mid->key;
   if (is_tail) {
     kv = mid;
   } else {
-    mid->next = NULL;
+    temp->next = NULL;
   }
   printf("######\n");
   printf("mid: %d\n", mid_key);
+  printf("is_tail: %d\n", is_tail);
   print_kv(kv);
   return binary_search(kv, key);
 }
@@ -80,8 +82,8 @@ int main() {
   KV *head = kv;
   for (int i = 0; i < size; i++)
   {
-    kv->key = i;
-    kv->value = i * 2;
+    kv->key = i * 2;
+    kv->value = i * 4;
 
     if (i  < size - 1) {
        KV *next = malloc(sizeof(KV));
@@ -91,7 +93,7 @@ int main() {
   }
 
 
-  int result = binary_search(head, 1);
+  int result = binary_search(head, 1114);
   printf("### result ###\n");
   printf("%d\n", result);
 
