@@ -109,7 +109,7 @@ int main(){
   printf("\n### original ###\n");
   print_list(s);
 
-  printf("\n### sorted ###\n");
+  printf("\n### asc sorted ###\n");
   List *r = sort(s);
   print_list(r);
 
