@@ -114,21 +114,6 @@ KVS* sort(KVS *s){
 
 // B+tree
 
-int insert(Tree *tree, int key, int value) {
-    // 初期状態
-    if (tree->root == NULL) {
-        Node *node = malloc(sizeof(Node)); // rootノードを作る
-        node->kvs_head = NULL;
-        node->parent = NULL; //rootノードなので親はいない。
-        node->childs = NULL;
-        node->next = NULL;
-        node->prev = NULL;
-        tree->root = node;
-        return 1;
-    }
-    return insert_kvs_to_node(tree->root, key, value);
-}
-
 int insert_kvs_to_node(Node *node, int key, int value) {
     int kl = kvs_length(node->kvs_head);
     // 初期状態 or 探索してエッジまでたどり着いた。
@@ -224,7 +209,27 @@ int insert_kvs_to_node(Node *node, int key, int value) {
     }
 }
 
+
+void insert(Tree *tree, int key, int value) {
+    // 初期状態
+    if (tree->root == NULL) {
+        Node *node = malloc(sizeof(Node)); // rootノードを作る
+        node->kvs_head = NULL;
+        node->parent = NULL; //rootノードなので親はいない。
+        node->childs = NULL;
+        node->next = NULL;
+        node->prev = NULL;
+        tree->root = node;
+    }
+    // 木の中に挿入する。
+    insert_kvs_to_node(tree->root, key, value);
+
+    return;
+}
+
+
 int main() {
     Tree *tree = malloc(sizeof(Tree));
+    insert(tree, 1, 2);
     return 0;
 }
