@@ -170,6 +170,8 @@ int insert_kvs_to_node(Tree *tree, Node *node, int key, int value) {
             KVS *latter = mid;
             spliter->next = NULL; // リストを分割する。formerからlaterを切り離す。
 
+            printf("mid: %d\n", mid->key);
+
             //横関係を保存する
             Node *before_parent = node->parent;
             Node *prev_node = node->prev;
@@ -208,13 +210,14 @@ int insert_kvs_to_node(Tree *tree, Node *node, int key, int value) {
             new_node_child_letter->childs = NULL;
 
             //親ノードの横関係を持たせる（nodeから継承）
-            new_node_parent->next = prev_node;
-            new_node_parent->prev = next_node;
             new_node_parent->parent = before_parent;
 
-            // 継承先がルートノードだった場合は、ルートノードを更新する。
-            if (before_parent == NULL) {
+            if (before_parent == NULL) {  // 継承先がルートノードだった場合は、ルートノードを更新する。
                 tree->root = new_node_parent;
+                new_node_parent->next = prev_node;
+                new_node_parent->prev = next_node;
+            } else {
+                before_parent->kvs_head->next = new_node_parent->kvs_head;
             }
 
             return 1;
