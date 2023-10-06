@@ -126,25 +126,35 @@ KVS* sort(KVS *s){
 
 
 // B+tree
-int insert_kvs_to_node(Tree *tree, Node *node, int key, int value, int is_backpropagation) {
+int insert_kvs_to_node(Tree *tree, Node *node, Node* entry, int is_backpropagation) {
     int kl = kvs_length(node->kvs_head);
+    if (is_backpropagation == 1) {
+        printf("kvs: %d (%d)\n", node->kvs_head->key, node->kvs_head->is_leaf);
+    }
     // 初期状態 or 探索してエッジまでたどり着いた。
     if (node->kvs_head == NULL || node->kvs_head->is_leaf == 0 || is_backpropagation == 1) {
         if (kl + 1 < TREE_DEGREE ) { //一個足すので
-            printf("insert to node directly: %d\n", is_backpropagation);
             KVS *kvs = malloc(sizeof(KVS));
-            kvs->key = key;
-            kvs->value = value;
+            kvs->key = entry->kvs_head->key;
+            kvs->value = entry->kvs_head->value;
             kvs->next = NULL;
             kvs->is_leaf = is_backpropagation;
             node->kvs_head = combine(node->kvs_head, kvs);
+
+            Node *child = entry->childs; //combineするときに親を更新
+            while (child != NULL)
+            {
+               child->parent = node;
+               child = child->next;
+            }
+            
             return 1;
         } else {
-            printf("make leaf and expand edges \n");
+            printf("make leaf and expand edges: %d\n", is_backpropagation);
             // リーフにエッジを追加して、AEC順にソート
             KVS *new_edge = malloc(sizeof(KVS));
-            new_edge->key = key;
-            new_edge->value = value;
+            new_edge->key = entry->kvs_head->key;
+            new_edge->value = entry->kvs_head->value;
             new_edge->next = NULL;
             new_edge->is_leaf = 0;
             node->kvs_head = combine(node->kvs_head, new_edge);
@@ -190,7 +200,7 @@ int insert_kvs_to_node(Tree *tree, Node *node, int key, int value, int is_backpr
             new_leaf->key = mid->key; //中央値をリーフにする。
             new_leaf->is_leaf = 1; //リーフフラグを立てる。
             new_leaf->next = NULL;
-            new_node_parent->kvs_head = new_leaf; //リーフKVSをおやノードに追加する。
+            new_node_parent->kvs_head = new_leaf; //リーフKVSをおやノードに追加する。kroeda!!!!!!!
 
             // 親と子を相互リンクさせる
             node->parent = new_node_parent;
@@ -216,9 +226,7 @@ int insert_kvs_to_node(Tree *tree, Node *node, int key, int value, int is_backpr
                 new_node_parent->next = prev_node;
                 new_node_parent->prev = next_node;
             } else { //すでにあればマージする。
-                // before_parent->kvs_head->next = new_node_parent->kvs_head;
-                printf("kvs: %d\n", kvs_length(before_parent->kvs_head));
-                insert_kvs_to_node(tree, before_parent, new_node_parent->kvs_head->key, new_node_parent->kvs_head->value, 1);
+                insert_kvs_to_node(tree, before_parent, new_node_parent, 1);
             }
 
             return 1;
@@ -229,7 +237,7 @@ int insert_kvs_to_node(Tree *tree, Node *node, int key, int value, int is_backpr
         Node *child_node_head = node->childs; //子ノードの先頭を取得
         Node *appled_child_node = child_node_head;
         while (child_node_head != NULL) {
-            if (child_node_head->kvs_head->key < key) { //子ノードの先頭のキーが挿入するキーより小さい場合は、そこに置く。
+            if (child_node_head->kvs_head->key < entry->kvs_head->key) { //子ノードの先頭のキーが挿入するキーより小さい場合は、そこに置く。
                 if (appled_child_node->kvs_head->key < child_node_head->kvs_head->key) { //appled_child_nodeのキーがchild_node_headのキーより大きい場合は、appled_child_nodeを更新する。
                      appled_child_node = child_node_head;
                 }
@@ -237,12 +245,13 @@ int insert_kvs_to_node(Tree *tree, Node *node, int key, int value, int is_backpr
             child_node_head = child_node_head->next;
         }
         // 子ノードに橋渡し
-        return insert_kvs_to_node(tree, appled_child_node, key, value, 0);
+        return insert_kvs_to_node(tree, appled_child_node, entry, 0);
     }
 }
 
 
 void insert(Tree *tree, int key, int value) {
+    printf("##### key: %d #######\n", key);
     // 初期状態
     if (tree->root == NULL) {
         Node *node = malloc(sizeof(Node)); // rootノードを作る
@@ -254,7 +263,12 @@ void insert(Tree *tree, int key, int value) {
         tree->root = node;
     }
     // 木の中に挿入する。
-    insert_kvs_to_node(tree, tree->root, key, value, 0);
+    Node *node = malloc(sizeof(Node));
+    node->kvs_head = malloc(sizeof(KVS));
+    node->kvs_head->key = key;
+    node->kvs_head->value = value;
+    node->childs = NULL;
+    insert_kvs_to_node(tree, tree->root, node, 0);
 
     return;
 }
@@ -285,6 +299,7 @@ int main() {
     insert(tree, 2, 8);
     insert(tree, 3, 7);
     insert(tree, 4, 7);
+    insert(tree, 5, 7);
     // insert(tree, 100, 8);
     draw_tree(tree);
     return 0;
