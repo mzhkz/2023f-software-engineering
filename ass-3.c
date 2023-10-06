@@ -43,12 +43,6 @@ List* combine(List *p, List *q) {
 }
 
 
-
-/**
- * @brief 
- * 
- * @param s 
- */
 List* sort(List *s){
 
   if (s == NULL) {
@@ -121,19 +115,3 @@ int main(){
 
   return 0;
 }
-
-// int main(){
-//   List *s, *p, *q, *z;
-//   p = malloc(sizeof(List));
-//   q = malloc(sizeof(List));
-//   z = malloc(sizeof(List));
-
-//   q->data = 100;
-//   z->data = 200;
-//   p->next = z;
-
-//   s = combine(NULL, q);
-//   print_list(s);
-
-//   return 0;
-// }
