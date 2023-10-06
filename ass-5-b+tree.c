@@ -284,6 +284,8 @@ int main() {
     insert(tree, 2, 8);
     insert(tree, 3, 7);
     insert(tree, 4, 6);
+    insert(tree, 2, 8);
+    insert(tree, 100, 8);
     draw_tree(tree);
     return 0;
 }
