@@ -222,16 +222,15 @@ int insert_kvs_to_node(Tree *tree, Node *node, int key, int value) {
     } else { //エッジではないので適切なのノードに橋渡し。
         // まずは適切なノードを探す。
         printf("search edge\n");
-        Node *appled_child_node = NULL;
         Node *child_node_head = node->childs; //子ノードの先頭を取得
+        Node *appled_child_node = child_node_head;
         while (child_node_head != NULL) {
             if (child_node_head->kvs_head->key < key) { //子ノードの先頭のキーが挿入するキーより小さい場合は、そこに置く。
-                if (appled_child_node->kvs_head->key > child_node_head->kvs_head->key) { //appled_child_nodeのキーがchild_node_headのキーより大きい場合は、appled_child_nodeを更新する。
+                if (appled_child_node->kvs_head->key < child_node_head->kvs_head->key) { //appled_child_nodeのキーがchild_node_headのキーより大きい場合は、appled_child_nodeを更新する。
                      appled_child_node = child_node_head;
                 }
-            } else {
-                break; //大きくなった瞬間に終了する。
-            }
+            } 
+            child_node_head = child_node_head->next;
         }
         // 子ノードに橋渡し
         return insert_kvs_to_node(tree, appled_child_node, key, value);
@@ -281,6 +280,7 @@ int main() {
     insert(tree, 1, 9);
     insert(tree, 2, 8);
     insert(tree, 3, 7);
+    insert(tree, 4, 6);
     draw_tree(tree);
     return 0;
 }
