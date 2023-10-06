@@ -43,6 +43,6 @@ int main() {
       exit(0);
     }
     s = s->next;
-    free(s);
   }
+  return 0;
 }
