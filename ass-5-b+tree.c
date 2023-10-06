@@ -27,6 +27,19 @@ typedef struct tree
 } Tree;
 
 
+void print_list(KVS *s) {
+  while (1)
+  {
+    if (s == NULL) {
+      return;
+    }
+    printf("%d ", s->key);
+    s = s->next;
+  }
+   printf("\n");
+}
+
+
 int kvs_length(KVS *head) {
   if (head == NULL) {
     return -1;
@@ -114,18 +127,21 @@ KVS* sort(KVS *s){
 
 // B+tree
 
-int insert_kvs_to_node(Node *node, int key, int value) {
+int insert_kvs_to_node(Tree *tree, Node *node, int key, int value) {
     int kl = kvs_length(node->kvs_head);
     // 初期状態 or 探索してエッジまでたどり着いた。
     if (node->kvs_head == NULL || node->kvs_head->is_leaf == 0) {
-        if (kl < TREE_DEGREE ) {
+        if (kl + 1 < TREE_DEGREE ) { //一個足すので
+            printf("insert to node directly\n");
             KVS *kvs = malloc(sizeof(KVS));
             kvs->key = key;
             kvs->value = value;
             kvs->next = NULL;
             kvs->is_leaf = 0;
+            node->kvs_head = combine(node->kvs_head, kvs);
             return 1;
         } else {
+            printf("make leaf and expand edges\n");
             // リーフにエッジを追加して、AEC順にソート
             KVS *new_edge = malloc(sizeof(KVS));
             new_edge->key = key;
@@ -137,10 +153,11 @@ int insert_kvs_to_node(Node *node, int key, int value) {
 
             // 中央値を取得
             int mid_key = kl+1 / 2; //new_edgeを個足したので+1
-            KVS *temp = node->kvs_head, *mid = NULL;
+            KVS *temp = node->kvs_head, *spliter = NULL, *mid = NULL;
             int cl = 1;
             while (1) {
-                if (cl == mid_key) {
+                if (cl == mid_key - 1) {
+                    spliter = temp;
                     mid = temp->next;
                     break;
                 }
@@ -150,8 +167,8 @@ int insert_kvs_to_node(Node *node, int key, int value) {
 
             // 二つに分割する。
             KVS *former = node->kvs_head;
-            KVS *latter = mid->next;
-            temp->next = NULL; // リストを分割する。formerからlaterを切り離す。
+            KVS *latter = mid;
+            spliter->next = NULL; // リストを分割する。formerからlaterを切り離す。
 
             //横関係を保存する
             Node *before_parent = node->parent;
@@ -191,21 +208,29 @@ int insert_kvs_to_node(Node *node, int key, int value) {
             new_node_parent->prev = next_node;
             new_node_parent->parent = before_parent;
 
+            // 継承先がルートノードだった場合は、ルートノードを更新する。
+            if (before_parent == NULL) {
+                tree->root = new_node_parent;
+            }
+
             return 1;
         }
     } else { //エッジではないので適切なのノードに橋渡し。
         // まずは適切なノードを探す。
+        printf("search edge\n");
         Node *appled_child_node = NULL;
         Node *child_node_head = node->childs; //子ノードの先頭を取得
-        while (1) {
+        while (child_node_head != NULL) {
             if (child_node_head->kvs_head->key < key) { //子ノードの先頭のキーが挿入するキーより小さい場合は、そこに置く。
-                appled_child_node = child_node_head;
+                if (appled_child_node->kvs_head->key > child_node_head->kvs_head->key) { //appled_child_nodeのキーがchild_node_headのキーより大きい場合は、appled_child_nodeを更新する。
+                     appled_child_node = child_node_head;
+                }
             } else {
                 break; //大きくなった瞬間に終了する。
             }
         }
         // 子ノードに橋渡し
-        return insert_kvs_to_node(appled_child_node, key, value);
+        return insert_kvs_to_node(tree, appled_child_node, key, value);
     }
 }
 
@@ -222,14 +247,32 @@ void insert(Tree *tree, int key, int value) {
         tree->root = node;
     }
     // 木の中に挿入する。
-    insert_kvs_to_node(tree->root, key, value);
+    insert_kvs_to_node(tree, tree->root, key, value);
 
     return;
+}
+
+void draw_tree(Tree *tree) {
+    Node *node = tree->root;
+    while (node != NULL) {
+        printf("[");
+        KVS *kvs = node->kvs_head;
+        while (kvs != NULL) {
+            printf(" <key: %d (%d)> ", kvs->key, kvs->is_leaf);
+            kvs = kvs->next;
+        }
+        printf("]");
+        printf("\n");
+        node = node->childs;
+    }
 }
 
 
 int main() {
     Tree *tree = malloc(sizeof(Tree));
-    insert(tree, 1, 2);
+    insert(tree, 1, 9);
+    insert(tree, 2, 8);
+    insert(tree, 3, 7);
+    draw_tree(tree);
     return 0;
 }
