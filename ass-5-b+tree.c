@@ -115,13 +115,24 @@ KVS* sort(KVS *s){
 // B+tree
 
 int insert(Tree *tree, int key, int value) {
-    
+    // 初期状態
+    if (tree->root == NULL) {
+        Node *node = malloc(sizeof(Node)); // rootノードを作る
+        node->kvs_head = NULL;
+        node->parent = NULL; //rootノードなので親はいない。
+        node->childs = NULL;
+        node->next = NULL;
+        node->prev = NULL;
+        tree->root = node;
+        return 1;
+    }
+    return insert_kvs_to_node(tree->root, key, value);
 }
 
 int insert_kvs_to_node(Node *node, int key, int value) {
     int kl = kvs_length(node->kvs_head);
-    // 探索してエッジまでたどり着いた。
-    if (node->kvs_head->is_leaf == 0) {
+    // 初期状態 or 探索してエッジまでたどり着いた。
+    if (node->kvs_head == NULL || node->kvs_head->is_leaf == 0) {
         if (kl < TREE_DEGREE ) {
             KVS *kvs = malloc(sizeof(KVS));
             kvs->key = key;
@@ -158,15 +169,17 @@ int insert_kvs_to_node(Node *node, int key, int value) {
             temp->next = NULL; // リストを分割する。formerからlaterを切り離す。
 
             //横関係を保存する
+            Node *before_parent = node->parent;
             Node *prev_node = node->prev;
             Node *next_node = node->next;
             //自身を子ノード(former child)にする。
             node->kvs_head = former;
-
+            node->childs = NULL; //子ノードはないのでNULL
 
             //新しい子ノード(letter child)を作る
             Node *new_node_child_letter= malloc(sizeof(Node));
             new_node_child_letter->kvs_head = latter;
+            new_node_child_letter->childs = NULL; //子ノードはないのでNULL
 
             //おやノード(リーフノード)を作る
             Node *new_node_parent = malloc(sizeof(Node));
@@ -174,20 +187,25 @@ int insert_kvs_to_node(Node *node, int key, int value) {
             new_leaf->key = mid->key; //中央値をリーフにする。
             new_leaf->is_leaf = 1; //リーフフラグを立てる。
             new_leaf->next = NULL;
-            node->kvs_head = new_leaf; //リーフKVSをノードに追加する。
+            new_node_parent->kvs_head = new_leaf; //リーフKVSをおやノードに追加する。
 
             // 親と子を相互リンクさせる
             node->parent = new_node_parent;
             new_node_child_letter->parent = new_node_parent;
+            new_node_parent->childs = node;
+            new_node_parent->childs->next = new_node_child_letter;
 
             //子ノード横の関係を持たせる
+            node->prev = NULL;
             node->next = new_node_child_letter; 
             new_node_child_letter->prev = node;
+            new_node_child_letter->next = NULL;
 
             //親ノードの横関係を持たせる（nodeから継承）
             new_node_parent->next = prev_node;
             new_node_parent->prev = next_node;
-            
+            new_node_parent->parent = before_parent;
+
             return 1;
         }
     } else { //エッジではないので適切なのノードに橋渡し。
