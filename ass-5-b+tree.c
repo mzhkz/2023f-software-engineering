@@ -203,6 +203,10 @@ int insert_kvs_to_node(Tree *tree, Node *node, int key, int value) {
             new_node_child_letter->prev = node;
             new_node_child_letter->next = NULL;
 
+            // 子ノードのchildを初期化
+            node->childs = NULL;
+            new_node_child_letter->childs = NULL;
+
             //親ノードの横関係を持たせる（nodeから継承）
             new_node_parent->next = prev_node;
             new_node_parent->prev = next_node;
@@ -255,15 +259,19 @@ void insert(Tree *tree, int key, int value) {
 void draw_tree(Tree *tree) {
     Node *node = tree->root;
     while (node != NULL) {
-        printf("[");
+        printf(" [");
         KVS *kvs = node->kvs_head;
         while (kvs != NULL) {
             printf(" <key: %d (%d)> ", kvs->key, kvs->is_leaf);
             kvs = kvs->next;
         }
-        printf("]");
-        printf("\n");
-        node = node->childs;
+        printf("] ");
+        if (node->next == NULL) {
+            node = node->childs;
+            printf("\n\n");
+        } else {
+            node = node->next;
+        }
     }
 }
 
