@@ -70,9 +70,9 @@ int connectNodeAsChild(Node *head, Node *q) {
 }
 
 
-int removeNode(Node *head, Node *q) {
+Node* removeNode(Node *head, Node *q) {
     if (head == NULL) {
-        return 0;
+        return NULL;
     } else {
         Node *p = head;
         //  while (p->next != NULL) {
@@ -85,12 +85,12 @@ int removeNode(Node *head, Node *q) {
                     p->prev->next = p->next;
                     p->next->prev = p->prev;
                 }
-                return 1;
+                return head;
             }
             p = p->next;
         }
     }
-    return 0;
+    return NULL;
 }
 
 KeyValue* removeKeyValue(KeyValue *head, int key) {
@@ -490,7 +490,10 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         Node *previous_parent = node->parent;
 
         // ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
-        removeNode(node->parent->child, node); 
+        Node* removed_node = removeNode(node->parent->child, node);
+        if (removed_node != NULL) {
+            node->parent->child = removed_node;
+        }
         node->parent = NULL;
         return insert_node(tree, previous_parent, new_parent_node->keyvalue, new_parent_node->child, 1);
     }
@@ -560,8 +563,9 @@ int main() {
     insert(tree, 7, 1);
     insert(tree, 3, 2);
     insert(tree, 2, 3);
-    insert(tree, 1, 3);
+    insert(tree, 1, 8);
     insert(tree, 4, 3);
+    insert(tree, 9, 34);
     draw_tree(tree);
     printf("read: %d\n", read(tree, tree->root, 1));
     // delete(tree, 1);
