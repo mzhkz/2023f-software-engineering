@@ -223,30 +223,6 @@ int binary_search(KeyValue *kv, int key) {
 }
 
 
-void print_nlist(Node *s) {
-  while (1)
-  {
-    if (s == NULL) {
-      return;
-    }
-    printf("%d ", s->keyvalue->key);
-    s = s->next;
-  }
-   printf("\n");
-}
-
-void print_list(KeyValue *s) {
-  while (1)
-  {
-    if (s == NULL) {
-      return;
-    }
-    printf("%d ", s->key);
-    s = s->next;
-  }
-   printf("\n");
-}
-
 int read(Tree *tree, Node *node, int key) {
     if (node->is_leaf == 1) {
         Node *child_head = node->child; //子ノードの先頭を取得!
@@ -289,7 +265,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
 
     // 対象のノードがあいていた場合
     if (node_kvs_length + 1 < TREE_DEGREE ) {
-        printf("insert;\n");
         node->keyvalue = combineKeyValueStore(node->keyvalue, kvs);
         node->keyvalue = quick_sort(node->keyvalue);
         Node *child = childs_head;
@@ -299,8 +274,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         }
         return 1;
     }
-
-    printf("retree;\n");
 
     // 対象のノードがいっぱいだった場合
     kvs->next = NULL;
@@ -353,7 +326,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     { // 前のノードがあれば、前のノードとつなぐ。
         node->prev->next = new_child_former_node;
         node->prev->link = new_child_former_node;
-        printf("connect prev node %d;\n", node->prev->keyvalue->key);
     }
 
     //親子関係を受け継ぐ
@@ -376,7 +348,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         Node *latter_child_head = mid_child;
         n_spliter->next = NULL; // リストを分割する。formerからlaterを切り離す。
 
-        print_nlist(node->child);
 
         new_child_former_node->child = former_child_head;
         new_child_letter_node->child = latter_child_head;
@@ -398,12 +369,10 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     new_child_letter_node->is_leaf = node->is_leaf;
 
     if (node->parent == NULL) {  // 継承先がルートノードだった場合は、ルートノードを更新する。
-        printf("updart root of tree;\n");
         tree->root = new_parent_node;
         return 1;
     } else { // すでにあればマージする。
         // 親ノードの横関係を持たせる（nodeから継承）
-        printf("update parent node;\n");
         Node *previous_parent = node->parent;
         removeNodeAsChild(node->parent, node); // ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
         return insert_node(tree, previous_parent, new_parent_node->keyvalue, new_parent_node->child, 1);
@@ -411,7 +380,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
 }
 
 void insert(Tree *tree, int key, int value) {
-    printf("##### key: %d #######\n", key);
     // 初期状態
     if (tree->root == NULL) {
         Node *node = malloc(sizeof(Node)); // rootノードを作る
@@ -435,6 +403,7 @@ void insert(Tree *tree, int key, int value) {
 }
 
 void draw_tree(Tree *tree) {
+    printf("##### Draw B+Tree #######\n\n");
     Node *node = tree->root;
     Node *layer_head = node;
     while (node != NULL) {
@@ -462,7 +431,6 @@ void draw_tree(Tree *tree) {
             node = node->link;
         }
     }
-    printf("\n");
 }
 
 
@@ -471,15 +439,15 @@ int main() {
     Tree *tree = malloc(sizeof(Tree));
     tree->node_count = 0;
     insert(tree, 1, 9);
-    draw_tree(tree);
+    // draw_tree(tree);
     insert(tree, 2, 8);
-     draw_tree(tree);
+    //  draw_tree(tree);
     insert(tree, 3, 7);
-     draw_tree(tree);
+    //  draw_tree(tree);
     insert(tree, 4, 7);
-    draw_tree(tree);
+    // draw_tree(tree);
     insert(tree, 5, 7);
-    draw_tree(tree);
+    // draw_tree(tree);
     insert(tree, 6, 71);
     draw_tree(tree);
     printf("read: %d\n", read(tree, tree->root, 2));
