@@ -389,21 +389,24 @@ int read(Tree *tree, Node *node, int key) {
         Node *child_head = node->child; //子ノードの先頭を取得!
         Node *appled_child = child_head;
         int is_former = key < node->keyvalue->key;
-        while (child_head != NULL) {
-            if (child_head->keyvalue->key == key) {
+        int border = 0;
+        while (child_head != NULL)
+        {
+            if (border <= key && key <= child_head->edge_end) {
                  appled_child = child_head;
                  break;
             }
-            if (is_former == 1) {
-                if (child_head->keyvalue->key <= appled_child->keyvalue->key) {
-                    appled_child = child_head;
-                }
+            // if (is_former == 1) {
+            //     if (child_head->keyvalue->key <= appled_child->keyvalue->key) {
+            //         appled_child = child_head;
+            //     }
 
-            } else {
-                if (child_head->keyvalue->key >= appled_child->keyvalue->key) {
-                    appled_child = child_head;
-                }
-            }
+            // } else {
+            //     if (child_head->keyvalue->key >= appled_child->keyvalue->key) {
+            //         appled_child = child_head;
+            //     }
+            // }
+            border = child_head->edge_end;
             child_head = child_head->next;
         }
         // 子ノードに橋渡し
@@ -691,15 +694,15 @@ void draw_tree(Tree *tree) {
 int main() {
     Tree *tree = malloc(sizeof(Tree));
     tree->node_count = 0;
-    for (int i = 1; i < 4; i++) {
+    for (int i = 1; i < 100; i++) {
         insert(tree, i, i * 2);
     }
-    // // draw_tree(tree);
-    // for (int i = 1; i < 100; i++) {
-    //     printf("find (key -> %d): %d\n", i, read(tree, tree->root, i));
-    // }
-    printf("find (key -> %d): %d\n", 33, read(tree, tree->root, 33));
+    draw_tree(tree);
+    for (int i = 1; i < 100; i++) {
+        printf("find (key -> %d): %d\n", i, read(tree, tree->root, i));
+    }
+    // printf("find (key -> %d): %d\n", 33, read(tree, tree->root, 33));
     // delete(tree, 1);
-     draw_tree(tree);
+    //  draw_tree(tree);
     return 0;
 }
