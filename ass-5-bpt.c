@@ -63,7 +63,7 @@ int removeNodeAsChild(Node *head, Node *q) {
     if (head->child == NULL) {
         return 0;
     } else {
-        Node *p = p->child;
+        Node *p = head->child;
         while (p->next != NULL) {
             if (p == q) {
                 p->prev->next = p->next;
@@ -239,8 +239,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         cl++;
     }
 
-    print_list(node->keyvalue);
-
 
     // 二つに分割する。
     KeyValue *former_keyvalue_head = node->keyvalue;
@@ -278,9 +276,14 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     connectNodeAsChild(new_parent_node, new_child_letter_node);
 
 
-    //チルド同士つんが得る
-    // connectNodeAsPeer(new_child_former_node, new_child_letter_node);
 
+    //チルド同士つんが得る
+    new_child_former_node->next = NULL;
+    new_child_letter_node->next = NULL;
+    connectNodeAsPeer(new_child_former_node, new_child_letter_node);
+    if (node->prev != NULL) {
+        node->prev->next = new_child_former_node;
+    }
 
     // KV for new leaf (new parent)
     KeyValue *new_mid_keyvalue = malloc(sizeof(KeyValue));
@@ -305,7 +308,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         // 親ノードの横関係を持たせる（nodeから継承）
         printf("update parent node;\n");
         removeNodeAsChild(node->parent, node); //ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
-        return insert_node(tree, node->parent, node->keyvalue, new_parent_node->child, 1);
+        return insert_node(tree, node->parent, new_parent_node->keyvalue, new_parent_node->child, 1);
     }
 }
 
