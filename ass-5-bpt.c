@@ -626,7 +626,7 @@ int main() {
     insert(tree, 4, 8);
     insert(tree, 5, 3);
     draw_tree(tree);
-    for (int i = 1; i < 6; i++) {
+    for (int i = 1; i < 7; i++) {
         printf("find (key -> %d): %d\n", i, read(tree, tree->root, i));
     }
     // delete(tree, 1);
