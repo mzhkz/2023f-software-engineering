@@ -188,6 +188,10 @@ void print_list(KeyValue *s) {
 
 
 int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is_backpropagation) {
+    // if (is_backpropagation == 1) {
+    //         printf("backpropagation %d;\n", node);
+    //         // return 1;
+    //  }
     if (node->is_leaf == 1 && is_backpropagation == 0) {
         Node *child_head = node->child; //子ノードの先頭を取得!
         Node *appled_child= child_head;
@@ -203,6 +207,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         return insert_node(tree, appled_child, kvs, NULL, 0);
     }
 
+
     // ノードに挿入
     int node_kvs_length = kvs_length(node->keyvalue);
 
@@ -213,7 +218,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         node->keyvalue = quick_sort(node->keyvalue);
         Node *child = childs_head;
         while (child != NULL) {
-            connectNodeAsChild(node, child);
+            child->parent = node;
             child = child->next;
         }
         return 1;
@@ -307,8 +312,9 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     } else { // すでにあればマージする。
         // 親ノードの横関係を持たせる（nodeから継承）
         printf("update parent node;\n");
-        removeNodeAsChild(node->parent, node); //ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
-        return insert_node(tree, node->parent, new_parent_node->keyvalue, new_parent_node->child, 1);
+        Node *previous_parent = node->parent;
+        removeNodeAsChild(node->parent, node); // ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
+        return insert_node(tree, previous_parent, new_parent_node->keyvalue, new_parent_node->child, 1);
     }
 }
 
@@ -369,7 +375,7 @@ int main() {
      draw_tree(tree);
     insert(tree, 4, 7);
     draw_tree(tree);
-    // insert(tree, 5, 7);
-    // draw_tree(tree);
+    insert(tree, 5, 7);
+    draw_tree(tree);
     return 0;
 }
