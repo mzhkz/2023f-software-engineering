@@ -75,11 +75,17 @@ int removeNode(Node *head, Node *q) {
         return 0;
     } else {
         Node *p = head;
-        while (p->next != NULL) {
+        //  while (p->next != NULL) {
+        while (p != NULL) {
             if (p == q) {
-                p->prev->next = p->next;
-                p->next->prev = p->prev;
-                return 0;
+                if (p->prev == NULL) {
+                    head = p->next;
+                    p->next->prev = NULL;
+                } else {
+                    p->prev->next = p->next;
+                    p->next->prev = p->prev;
+                }
+                return 1;
             }
             p = p->next;
         }
@@ -93,10 +99,30 @@ int removeKeyValue(KeyValue *head, int key) {
     } else {
         KeyValue *p = head;
         KeyValue *b = NULL;
-        while (p->next != NULL) {
+        while (p != NULL) {
             if (p->key == key) {
                 b->next = p->next;
-                return 0;
+                return 1;
+            }
+            b = p;
+            p = p->next;
+        }
+    }
+
+    return 0;
+}
+
+int replaceKeyValue(KeyValue *head, int key, KeyValue *new_kv) {
+    if (head == NULL) {
+        return 0;
+    } else {
+        KeyValue *p = head;
+        KeyValue *b = NULL;
+        while (p->next != NULL) {
+            if (p->key == key) {
+                new_kv->next = p->next;
+                b->next = new_kv;
+                return 1;
             }
             b = p;
             p = p->next;
@@ -240,25 +266,50 @@ int binary_search(KeyValue *kv, int key) {
   return binary_search(kv, key);
 }
 
-// int delete(Tree *tree, Node *node, int key) {
-//     if (node->is_leaf == 1) {
-//         Node *child_head = node->child; //子ノードの先頭を取得!
-//         Node *appled_child= child_head;
-//         while (child_head != NULL) {
-//             if (child_head->keyvalue->key <= key) { 
-//                 if (appled_child->keyvalue->key <= child_head->keyvalue->key) { 
-//                         appled_child = child_head;
-//                 }
-//             } 
-//             child_head = child_head->next;
-//         }
-//         // 子ノードに橋渡し
-//         return delete(tree, appled_child, key);
-//     } else {
-//         removeNode(appled_child, key)
-//         return 1;
-//     }
-// }
+int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, Node *from) {
+    if (node->is_leaf == 1) {
+        if (is_backpropagation == 0) {
+            Node *child_head = node->child; //子ノードの先頭を取得!
+            Node *appled_child= child_head;
+            while (child_head != NULL) {
+                if (child_head->keyvalue->key <= key) { 
+                    if (appled_child->keyvalue->key <= child_head->keyvalue->key) { 
+                            appled_child = child_head;
+                    }
+                } 
+                child_head = child_head->next;
+            }
+            // 子ノードに橋渡し
+            return delete_from_node(tree, appled_child, key, 0, NULL);
+        } else {
+            Node *peer_head = node;
+            while (peer_head->prev != NULL) {
+                peer_head = peer_head->prev;
+            }
+            while (peer_head != NULL) {
+                if (removeKeyValue(peer_head->keyvalue, key) == 1) {
+                    KeyValue *keyvalue = malloc(sizeof(KeyValue));
+                    keyvalue->key = key;
+                    keyvalue->value = from->keyvalue->value;
+                    keyvalue->next = NULL;
+                    replaceKeyValue(node->keyvalue, key,keyvalue);
+                    if (node->parent == NULL) {
+                        return 1;
+                    } else {
+                        return delete_from_node(tree, node->parent, key, 1, node);
+                    }
+                }
+                peer_head = peer_head->next;
+            }
+        }
+    } else {
+        if (removeKeyValue(node->keyvalue, key) == 1) {
+            return delete_from_node(tree, node->parent, key, 1, node); 
+        }
+    }
+    printf("error");
+    return -1;
+}
 
 
 int read(Tree *tree, Node *node, int key) {
@@ -420,7 +471,11 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     }
 }
 
-void insert(Tree *tree, int key, int value) {
+int delete(Tree *tree, int key) {
+    return delete_from_node(tree, tree->root, key, 0, NULL);
+}
+
+int insert(Tree *tree, int key, int value) {
     // 初期状態
     if (tree->root == NULL) {
         Node *node = malloc(sizeof(Node)); // rootノードを作る
@@ -438,9 +493,7 @@ void insert(Tree *tree, int key, int value) {
     keyvalue->key = key;
     keyvalue->value = value;
     keyvalue->next = NULL;
-    insert_node(tree, tree->root, keyvalue, NULL, 0);
-
-    return;
+    return insert_node(tree, tree->root, keyvalue, NULL, 0);
 }
 
 void draw_tree(Tree *tree) {
@@ -492,5 +545,7 @@ int main() {
     insert(tree, 6, 71);
     draw_tree(tree);
     printf("read: %d\n", read(tree, tree->root, 2));
+    delete(tree, 6);
+    draw_tree(tree);
     return 0;
 }
