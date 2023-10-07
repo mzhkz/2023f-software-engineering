@@ -2,6 +2,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+// 最小値を返すマクロ
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
+// 最大値を返すマクロ
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
 #define TREE_DEGREE 3
 
 typedef struct KeyValue
@@ -20,6 +26,9 @@ typedef struct Node
     struct Node *child;
     struct Node *parent;
     struct Node *link;
+
+    int edge_start;
+    int edge_end;
     int is_leaf;
 
     struct KeyValue *keyvalue;
@@ -241,11 +250,18 @@ KeyValue* quick_sort(KeyValue *s){
 
 int binary_search(KeyValue *kv, int key, int start, int end) {
   // リストをキーでソート済みと仮定
+  if (end - start == 0) {
+     if (kv->key == key) {
+        return kv->value; // キーが見つかった場合
+     } else {
+        return -1; // キーが見つからなかった場合
+     }
+  }
   if (start > end) {
       return -1; // キーが見つからなかった場合
   }
   KeyValue *temp = kv, *mid_kv = NULL;
-  int mid = (start + end) / 2;
+  int mid = ((end - start) / 2) + start;
   if (start == end ) {
       mid_kv = kv;
   }
@@ -280,6 +296,7 @@ int binary_search(KeyValue *kv, int key, int start, int end) {
 
 int search_key(KeyValue *kv, int key) {
   int length = kvs_length(kv);
+  printf("length: %d\n", length);
   return binary_search(kv, key, 0, length - 1);
 }
 
@@ -383,21 +400,23 @@ int read(Tree *tree, Node *node, int key) {
                 }
 
             } else {
-                 if (child_head->keyvalue->key > appled_child->keyvalue->key) {
+                if (child_head->keyvalue->key >= appled_child->keyvalue->key) {
                     appled_child = child_head;
                 }
             }
             child_head = child_head->next;
         }
         // 子ノードに橋渡し
+        printf("%d\n", appled_child->keyvalue->key);
         return read(tree, appled_child, key);
     } else {
+        // return -1;
         return search_key(node->keyvalue, key);
     }
 }
 
 
-int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is_backpropagation) {
+int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is_backpropagation, Node *from) {
     if (node->is_leaf == 1 && is_backpropagation == 0) {
         Node *child_head = node->child; //子ノードの先頭を取得!
         Node *appled_child= child_head;
@@ -410,7 +429,13 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
             child_head = child_head->next;
         }
         // 子ノードに橋渡し
-        return insert_node(tree, appled_child, kvs, NULL, 0);
+        if ( appled_child->edge_start > kvs->key ) {
+            appled_child->edge_start = kvs->key;
+        }
+        if (appled_child->edge_end < kvs->key ) {
+            appled_child->edge_end = kvs->key;
+        }
+        return insert_node(tree, appled_child, kvs, NULL, 0, NULL);
     }
 
 
@@ -426,6 +451,8 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
             child->parent = node;
             child = child->next;
         }
+        // node->edge_start = min(node->edge_start, childs_head);
+        // node->edge_start = max(node->edge_start, childs_head);
         return 1;
     }
 
@@ -434,9 +461,9 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     node->keyvalue = combineKeyValueStore(node->keyvalue, kvs);
     node->keyvalue = quick_sort(node->keyvalue);
 
-    int mid_index = node_kvs_length+1 / 2; //new_edgeを個足したので+1
+    int mid_index = (node_kvs_length+1) / 2; //new_edgeを個足したので+1
     KeyValue *temp = node->keyvalue, *spliter = NULL, *mid_keyvalue = NULL;
-    int cl = 1;
+    int cl = 0;
     while (1) {
         if (cl == mid_index - 1) {
             spliter = temp;
@@ -547,7 +574,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
             node->parent->child = removed_node;
         }
         node->parent = NULL;
-        return insert_node(tree, previous_parent, new_parent_node->keyvalue, new_parent_node->child, 1);
+        return insert_node(tree, previous_parent, new_parent_node->keyvalue, new_parent_node->child, 1, node);
     }
 }
 
@@ -573,7 +600,7 @@ int insert(Tree *tree, int key, int value) {
     keyvalue->key = key;
     keyvalue->value = value;
     keyvalue->next = NULL;
-    return insert_node(tree, tree->root, keyvalue, NULL, 0);
+    return insert_node(tree, tree->root, keyvalue, NULL, 0, NULL);
 }
 
 void draw_tree(Tree *tree) {
@@ -604,7 +631,7 @@ void draw_tree(Tree *tree) {
             }
             printf("");
         }
-        printf("] ");
+        printf("(%d-%d) ] ", node->edge_start, node->edge_end);
         if (node->link == NULL) {
             node = layer_head->child;
             layer_head = node;
@@ -620,15 +647,15 @@ void draw_tree(Tree *tree) {
 int main() {
     Tree *tree = malloc(sizeof(Tree));
     tree->node_count = 0;
-    insert(tree, 1, 1001);
-    insert(tree, 2, 2);
-    insert(tree, 3, 33);
-    insert(tree, 4, 8);
-    insert(tree, 5, 3);
-    draw_tree(tree);
-    for (int i = 1; i < 7; i++) {
-        printf("find (key -> %d): %d\n", i, read(tree, tree->root, i));
+    for (int i = 1; i < 100; i++) {
+        insert(tree, i, i * 2);
     }
+    // // draw_tree(tree);
+    // for (int i = 1; i < 100; i++) {
+    //     printf("find (key -> %d): %d\n", i, read(tree, tree->root, i));
+    // }
+    printf("find (key -> %d): %d\n", 33, read(tree, tree->root, 33));
     // delete(tree, 1);
+     draw_tree(tree);
     return 0;
 }
