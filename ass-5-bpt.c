@@ -75,8 +75,8 @@ Node* removeNode(Node *head, Node *q) {
         return NULL;
     } else {
         Node *p = head;
-        //  while (p->next != NULL) {
-        while (p != NULL) {
+         while (p->next != NULL) {
+        // while (p != NULL) {
             if (p == q) {
                 if (p->prev == NULL) {
                     head = p->next;
@@ -299,34 +299,75 @@ int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, No
             // 子ノードに橋渡し
             return delete_from_node(tree, appled_child, key, 0, NULL);
         } else { // バックプロパゲーション
-            Node *peer_head = node;
-            while (peer_head->prev != NULL) {
-                peer_head = peer_head->prev;
-            }
-            while (peer_head != NULL)
-            {
-                int removed_kvs = search_key(peer_head->keyvalue, key);
-                if (removed_kvs != -1) // 削除対象のキーがあった場合
-                {
-                    KeyValue *keyvalue = malloc(sizeof(KeyValue));
-                    keyvalue->key = key;
-                    keyvalue->value = from->keyvalue->value;
-                    keyvalue->next = NULL;
-                    peer_head->keyvalue = replaceKeyValue(peer_head->keyvalue, key, keyvalue); // 削除対象のキーを置き換える。
-                    break; // 一つ見つかれば終了
+            Node *previous_parent = node->parent;
+            // Node *peer_head = node;
+            // while (peer_head->prev != NULL)
+            // {
+            //     peer_head = peer_head->prev;
+            // }
+            // while (peer_head != NULL)
+            // {
+            //     int removed_kvs = search_key(peer_head->keyvalue, key);
+            //     if (removed_kvs != -1) // 削除対象のキーがあった場合
+            //     {
+            //         KeyValue *keyvalue = malloc(sizeof(KeyValue));
+            //         keyvalue->key = key;
+            //         keyvalue->value = from->keyvalue->value;
+            //         keyvalue->next = NULL;
+            //         peer_head->keyvalue = replaceKeyValue(peer_head->keyvalue, key, keyvalue); // 削除対象のキーを置き換える。
+            //         break; // 一つ見つかれば終了
+            //     }
+            //     peer_head = peer_head->next; // 次のノードに移動
+            // }
+
+            // leafノードのchild1だった場合は、削除する。
+            if (node->is_leaf == 1 && kvs_length(node->keyvalue) <= 1) {
+                //親の子供（自分）を削除する
+                node->parent->child = removeNode(node->parent->child, node);
+                node->parent = NULL;
+
+                // 親の子供が一つだった場合は、親の子供を親の親に継承する。
+                if (nodes_length(node->parent->child) <= 1) {
+                    Node *other_node = node->parent->child;
+                    node->parent->child = removeNode(node->parent->child, other_node);
+                    other_node->parent = NULL;
+                    // 親の親のkvsを更新する。other leaf nodeと合体
+                    node->parent->keyvalue = combineKeyValueStore(node->parent->keyvalue, other_node->keyvalue);
+
+                    if (node->parent->parent == NULL) {
+                        tree->root = node->parent;
+                    } else {
+                        // 親の親の子供を更新する。
+                        Node *removed_node = removeNode(node->parent->parent->child, node->parent);
+                        node->parent->parent->child = removed_node;
+                        node->parent->parent = NULL;
+                    }
                 }
-                peer_head = peer_head->next; // 次のノードに移動
+                // // 子供の親を削除する。
+                // Node *f_child = node->child;
+                // while (f_child != NULL) {
+                //      // ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
+                //     Node* removed_node = removeNode(node->child, f_child);
+                //     node->child = removed_node;
+                //     f_child->parent = node->parent;
+                //     connectNodeAsChild(node->parent, f_child);
+                //     f_child = f_child->next;
+                // }
+                // node->child = NULL;
+                
             }
+
             if (node->parent == NULL) {
                 return 1; // ルートノードだった場合は、終了(一番topまで探索した)
             } else {
-                return delete_from_node(tree, node->parent, key, 1, node);
+                return delete_from_node(tree, previous_parent, key, 1, node);
             }
         }
     } else {
         int is_exist = search_key(node->keyvalue, key);
         if (is_exist != -1) 
         {
+            Node *previous_parent = node->parent;
             KeyValue *removed_kvs = removeKeyValue(node->keyvalue, key);
             node->keyvalue = removed_kvs;
 
@@ -334,14 +375,11 @@ int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, No
             if (kvs_length(node->keyvalue) <= 0) {
                 Node* removed_node = removeNode(node->parent->child, node);
                 if (removed_node != NULL) {
-                    node->parent->child = NULL;
-                    printf("removed_node: %d\n", node->parent);
+                    node->parent->child = removed_node;
                 }
                 node->parent = NULL;
             }
-
-            return 1;
-            // return delete_from_node(tree, node->parent, key, 1, node);
+            return delete_from_node(tree, previous_parent, key, 1, node);
         }
     }
     printf("error");
@@ -567,7 +605,7 @@ void draw_tree(Tree *tree) {
                 if (child->keyvalue != NULL) {
                     printf("%d,", child->keyvalue->key);
                 } else {
-                    printf("%d,", node);
+                    printf("NULL,");
                 }
                 child = child->next;
             }
@@ -589,14 +627,14 @@ void draw_tree(Tree *tree) {
 int main() {
     Tree *tree = malloc(sizeof(Tree));
     tree->node_count = 0;
-    insert(tree, 1, 1);
+    insert(tree, 1, 1001);
     insert(tree, 2, 2);
     insert(tree, 3, 3);
     insert(tree, 4, 8);
     insert(tree, 5, 3);
     draw_tree(tree);
     printf("read: %d\n", read(tree, tree->root, 1));
-    delete(tree, 1);
+    // delete(tree, 1);
     draw_tree(tree);
     return 0;
 }
