@@ -172,13 +172,12 @@ int insert_kvs_to_node(Tree *tree, Node *node, Node* entry, int is_backpropagati
             node->kvs_head = combine(node->kvs_head, kvs);
             Node *child = entry->childs; //combineするときに親を更新
             printf("combine\n");
-            print_nlist(child);
-            // while (child != NULL) {
-            //     child->parent = node;
-            //     combineNode(node->childs, child);
-            //     child = child->next;
-            // }
-            entry->childs = NULL;
+
+            while (child != NULL) {
+                child->parent = node;
+                child = child->next;
+            }
+          
 
             return 1;
         } else {
@@ -219,7 +218,7 @@ int insert_kvs_to_node(Tree *tree, Node *node, Node* entry, int is_backpropagati
             Node *next_node = node->next;
             //自身を子ノード(former child)にする。
             node->kvs_head = former;
-            node->childs = NULL; //子ノードはないのでNULL
+            // node->childs = NULL; //子ノードはないのでNULL
 
             //新しい子ノード(letter child)を作る
             Node *new_node_child_letter= malloc(sizeof(Node));
@@ -252,17 +251,19 @@ int insert_kvs_to_node(Tree *tree, Node *node, Node* entry, int is_backpropagati
             node->childs = NULL;
             new_node_child_letter->childs = NULL;
 
-            //親ノードの横関係を持たせる（nodeから継承）
-            new_node_parent->parent = before_parent;
 
             if (before_parent == NULL) {  // 継承先がルートノードだった場合は、ルートノードを更新する。
                 tree->root = new_node_parent;
                 new_node_parent->next = prev_node;
                 new_node_parent->prev = next_node;
             } else { //すでにあればマージする。
+                //親ノードの横関係を持たせる（nodeから継承）
+
+
+                new_node_parent->parent = before_parent->parent;
                 printf("merge\n");
-                print_nlist(before_parent->childs);
-                printf("new child\n");
+                print_nlist(before_parent);
+                printf("new ch\n");
                 print_nlist(new_node_parent->childs);
                 insert_kvs_to_node(tree, before_parent, new_node_parent, 1);
             }
