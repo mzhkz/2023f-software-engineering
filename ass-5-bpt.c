@@ -69,11 +69,12 @@ int connectNodeAsChild(Node *head, Node *q) {
     return 0;
 }
 
-int removeNodeAsChild(Node *head, Node *q) {
-    if (head->child == NULL) {
+
+int removeNode(Node *head, Node *q) {
+    if (head == NULL) {
         return 0;
     } else {
-        Node *p = head->child;
+        Node *p = head;
         while (p->next != NULL) {
             if (p == q) {
                 p->prev->next = p->next;
@@ -220,6 +221,25 @@ int binary_search(KeyValue *kv, int key) {
     temp->next = NULL;
   }
   return binary_search(kv, key);
+}
+
+int delete(Tree *tree, Node *node, int key) {
+    if (node->is_leaf == 1) {
+        Node *child_head = node->child; //子ノードの先頭を取得!
+        Node *appled_child= child_head;
+        while (child_head != NULL) {
+            if (child_head->keyvalue->key <= key) { 
+                if (appled_child->keyvalue->key <= child_head->keyvalue->key) { 
+                        appled_child = child_head;
+                }
+            } 
+            child_head = child_head->next;
+        }
+        // 子ノードに橋渡し
+        return read(tree, appled_child, key);
+    } else {
+        return binary_search(node->keyvalue, key);
+    }
 }
 
 
@@ -374,7 +394,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     } else { // すでにあればマージする。
         // 親ノードの横関係を持たせる（nodeから継承）
         Node *previous_parent = node->parent;
-        removeNodeAsChild(node->parent, node); // ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
+        removeNode(node->parent->child, node); // ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
         return insert_node(tree, previous_parent, new_parent_node->keyvalue, new_parent_node->child, 1);
     }
 }
