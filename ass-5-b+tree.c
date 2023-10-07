@@ -65,6 +65,25 @@ int kvs_length(KVS *head) {
   return cl;
 }
 
+int removeNodeAsChild(Node *head, Node *q) {
+    if (head->childs == NULL) {
+        return 0;
+    } else {
+        Node *p = p->childs;
+        while (p->next != NULL) {
+            if (p == q) {
+                p->prev->next = p->next;
+                p->next->prev = p->prev;
+                return 0;
+            }
+            p = p->next;
+        }
+    }
+    q->parent = NULL;
+
+    return 0;
+}
+
 KVS* combine(KVS *p, KVS *q) {
   if (p == NULL)
   {
@@ -256,16 +275,19 @@ int insert_kvs_to_node(Tree *tree, Node *node, Node* entry, int is_backpropagati
                 tree->root = new_node_parent;
                 new_node_parent->next = prev_node;
                 new_node_parent->prev = next_node;
-            } else { //すでにあればマージする。
-                //親ノードの横関係を持たせる（nodeから継承）
-
+                return 0;
+            }
+            else
+            { // すでにあればマージする。
+                // 親ノードの横関係を持たせる（nodeから継承）
 
                 new_node_parent->parent = before_parent->parent;
                 printf("merge\n");
                 print_nlist(before_parent);
                 printf("new ch\n");
                 print_nlist(new_node_parent->childs);
-                insert_kvs_to_node(tree, before_parent, new_node_parent, 1);
+                removeNodeAsChild(before_parent, node); //ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
+                return insert_kvs_to_node(tree, before_parent, new_node_parent, 1);
             }
 
             return 1;
