@@ -8,8 +8,6 @@
 // 最大値を返すマクロ
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
-#define TREE_DEGREE 3
-
 typedef struct KeyValue
 {
     int key;
@@ -35,7 +33,7 @@ typedef struct Node
 typedef struct Tree
 {
     Node *root;
-    int node_count;
+    int degree;
 } Tree;
 
 int connectNodeAsLink(Node *head, Node *q) {
@@ -438,7 +436,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     int node_kvs_length = kvs_length(node->keyvalue);
 
     // 対象のノードがあいていた場合
-    if (node_kvs_length + 1 < TREE_DEGREE ) {
+    if (node_kvs_length + 1 < tree->degree ) {
         node->keyvalue = combineKeyValueStore(node->keyvalue, kvs);
         node->keyvalue = quick_sort(node->keyvalue);
         node->edge_end = max(node->edge_end, kvs->key);
@@ -666,14 +664,25 @@ void draw_tree(Tree *tree) {
 
 
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        // プログラム実行時に引数が正しく渡されなかった場合のエラーメッセージ
+        printf("Usage: %s <degree> <size>\n", argv[0]);
+        return 1; // エラーコードを返してプログラムを終了
+    }
+
+    int degree = atoi(argv[1]); // コマンドライン引数を整数に変換
+    int size = atoi(argv[2]); // コマンドライン引数を整数に変換
+
+    printf("size: %d\n", size);
     Tree *tree = malloc(sizeof(Tree));
-    tree->node_count = 0;
-    for (int i = 1; i < 100; i++) {
+    tree->degree = degree;
+    for (int i = 1; i < size + 1; i++)
+    {
         insert(tree, i, i * 2);
     }
     draw_tree(tree);
-    for (int i = 1; i < 100; i++) {
+    for (int i = 1; i < size * 2; i++) {
         printf("find (key -> %d): %d\n", i, find(tree, i));
     }
     return 0;
