@@ -451,8 +451,11 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
             child->parent = node;
             child = child->next;
         }
-        // node->edge_start = min(node->edge_start, childs_head);
-        // node->edge_start = max(node->edge_start, childs_head);
+        
+        if (is_backpropagation == 1) {
+            node->edge_start = min(node->edge_start, from->edge_start);
+            node->edge_start = max(node->edge_end, from->edge_end);
+        }
         return 1;
     }
 
