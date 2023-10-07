@@ -495,6 +495,8 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     new_parent_node->parent = NULL;
     new_parent_node->child = NULL;
 
+    
+
 
     //子供にする
     connectNodeAsChild(new_parent_node, new_child_former_node);
@@ -539,14 +541,24 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         Node *f_child = new_child_former_node->child;
         while (f_child != NULL) {
             f_child->parent = new_child_former_node;
+
+            // new_child_former_node->edge_start = min(new_child_former_node->edge_start, f_child->edge_start);
+            // new_child_former_node->edge_end = max(new_child_former_node->edge_end, f_child->edge_end);
+
             f_child = f_child->next;
         }
 
         Node *l_child = new_child_letter_node->child;
         while (l_child != NULL) {
             l_child->parent = new_child_letter_node;
+
+            // new_child_letter_node->edge_start = min(new_child_letter_node->edge_start, f_child->edge_start);
+            // new_child_letter_node->edge_end = max(new_child_letter_node->edge_end, f_child->edge_end);
+
             l_child = l_child->next;
         }
+        // new_parent_node->edge_start = min(new_child_former_node->edge_start, new_child_letter_node->edge_start);
+        // new_parent_node->edge_end = max(new_child_former_node->edge_end, new_child_letter_node->edge_end);
    }
 
     // KV for new leaf (new parent)
