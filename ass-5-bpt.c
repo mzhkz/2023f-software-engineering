@@ -252,8 +252,8 @@ int read(Tree *tree, Node *node, int key) {
         Node *child_head = node->child; //子ノードの先頭を取得!
         Node *appled_child= child_head;
         while (child_head != NULL) {
-            if (child_head->keyvalue->key < key) { //子ノードの先頭のキーが挿入するキーより小さい場合は、そこに置く。
-                if (appled_child->keyvalue->key < child_head->keyvalue->key) { //appled_child_nodeのキーがchild_node_headのキーより大きい場合は、appled_child_nodeを更新する。
+            if (child_head->keyvalue->key <= key) { 
+                if (appled_child->keyvalue->key <= child_head->keyvalue->key) { 
                         appled_child = child_head;
                 }
             } 
@@ -482,6 +482,6 @@ int main() {
     draw_tree(tree);
     insert(tree, 6, 71);
     draw_tree(tree);
-    printf("read: %d\n", read(tree, tree->root, 6));
+    printf("read: %d\n", read(tree, tree->root, 2));
     return 0;
 }
