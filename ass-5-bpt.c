@@ -281,7 +281,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     connectNodeAsChild(new_parent_node, new_child_letter_node);
 
 
-
     //チルド同士つんが得る
     new_child_former_node->next = NULL;
     new_child_letter_node->next = NULL;
@@ -289,6 +288,10 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     if (node->prev != NULL) {
         node->prev->next = new_child_former_node;
     }
+
+    //親子関係を受け継ぐ
+    new_child_former_node->child = node->child;
+    new_child_letter_node->child = node->child;
 
     // KV for new leaf (new parent)
     KeyValue *new_mid_keyvalue = malloc(sizeof(KeyValue));
@@ -376,6 +379,8 @@ int main() {
     insert(tree, 4, 7);
     draw_tree(tree);
     insert(tree, 5, 7);
+    draw_tree(tree);
+    insert(tree, 6, 71);
     draw_tree(tree);
     return 0;
 }
