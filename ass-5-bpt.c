@@ -306,9 +306,11 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     new_child_letter_node->next = NULL;
     connectNodeAsPeer(new_child_former_node, new_child_letter_node);
     connectNodeAsLink(new_child_former_node, new_child_letter_node); //描写用のリンク
-    if (node->prev != NULL) { //前のノードがあれば、前のノードとつなぐ。
+    if (node->prev != NULL)
+    { // 前のノードがあれば、前のノードとつなぐ。
         node->prev->next = new_child_former_node;
         node->prev->link = new_child_former_node;
+        printf("connect prev node %d;\n", node->prev->keyvalue->key);
     }
 
     //親子関係を受け継ぐ
@@ -391,6 +393,7 @@ void insert(Tree *tree, int key, int value) {
 
 void draw_tree(Tree *tree) {
     Node *node = tree->root;
+    Node *layer_head = node;
     while (node != NULL) {
         printf(" [");
         KeyValue *kvs = node->keyvalue;
@@ -408,23 +411,15 @@ void draw_tree(Tree *tree) {
             printf(" )");
         }
         printf("] ");
-        if (node->next == NULL) {
-            node = node->child;
-
-           if (node != NULL) {
-                Node *child_head = node;
-                while (child_head->prev != NULL) {
-                    child_head = child_head->prev;
-                }
-                node = child_head;
-           }
+        if (node->link == NULL) {
+            node = layer_head->child;
+            layer_head = node;
             printf("\n\n");
-        }
-        else
-        {
-            node = node->next;
+        } else {
+            node = node->link;
         }
     }
+    printf("\n");
 }
 
 
