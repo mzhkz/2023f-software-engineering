@@ -584,12 +584,16 @@ void draw_tree(Tree *tree) {
         printf(" [");
         KeyValue *kvs = node->keyvalue;
         while (kvs != NULL) {
-            printf(" <key: %d (%d)> ", kvs->key, node->is_leaf);
+            if (node->is_leaf == 1) {
+                printf(" <key:%d, is_leaf)> ", kvs->key);
+            } else {
+                printf(" <key:%d, val:%d)> ", kvs->key, kvs->value);
+            }
             kvs = kvs->next;
         }
         Node *child = node->child;
         if (child != NULL) {
-            printf(" (");
+            printf(" branch:");
             while (child != NULL) {
                 if (child->keyvalue != NULL) {
                     printf("%d,", child->keyvalue->key);
@@ -598,7 +602,7 @@ void draw_tree(Tree *tree) {
                 }
                 child = child->next;
             }
-            printf(" )");
+            printf("");
         }
         printf("] ");
         if (node->link == NULL) {
@@ -623,7 +627,7 @@ int main() {
     insert(tree, 5, 3);
     draw_tree(tree);
     for (int i = 1; i < 6; i++) {
-        printf("find: %d\n", read(tree, tree->root, i));
+        printf("find (key -> %d): %d\n", i, read(tree, tree->root, i));
     }
     // delete(tree, 1);
     return 0;
