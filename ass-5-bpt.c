@@ -93,7 +93,7 @@ int removeNode(Node *head, Node *q) {
     return 0;
 }
 
-int removeKeyValue(KeyValue *head, int key) {
+KeyValue* removeKeyValue(KeyValue *head, int key) {
     if (head == NULL) {
         return 0;
     } else {
@@ -101,18 +101,24 @@ int removeKeyValue(KeyValue *head, int key) {
         KeyValue *b = NULL;
         while (p != NULL) {
             if (p->key == key) {
-                b->next = p->next;
-                return 1;
+                if (b == NULL) {
+                    head = p->next;
+                }
+                else
+                {
+                   b->next = p->next;
+                }
+                return head;
             }
             b = p;
             p = p->next;
         }
     }
 
-    return 0;
+    return NULL;
 }
 
-int replaceKeyValue(KeyValue *head, int key, KeyValue *new_kv) {
+KeyValue* replaceKeyValue(KeyValue *head, int key, KeyValue *new_kv) {
     if (head == NULL) {
         return 0;
     } else {
@@ -121,15 +127,19 @@ int replaceKeyValue(KeyValue *head, int key, KeyValue *new_kv) {
         while (p->next != NULL) {
             if (p->key == key) {
                 new_kv->next = p->next;
-                b->next = new_kv;
-                return 1;
+                if (b == NULL) {
+                    head = new_kv;
+                } else {
+                    b->next = new_kv;
+                }
+                return head;
             }
             b = p;
             p = p->next;
         }
     }
 
-    return 0;
+    return NULL;
 }
 
 KeyValue* combineKeyValueStore(KeyValue *head, KeyValue *q) {
@@ -229,41 +239,48 @@ KeyValue* quick_sort(KeyValue *s){
   return combineKeyValueStore(combineKeyValueStore(quick_sort(q_start), s), quick_sort(p_start));
 }
 
-int binary_search(KeyValue *kv, int key) {
-  // aes sortは実装済みとする
-  int lengh = kvs_length(kv);
-  if (lengh <= 1) {
-    if (kv != NULL && kv->key == key) {
-      return kv->value;
-    }
-    return -1;
+int binary_search(KeyValue *kv, int key, int start, int end) {
+  // リストをキーでソート済みと仮定
+  if (start > end) {
+      return -1; // キーが見つからなかった場合
   }
-
-  int mid_key = lengh / 2;
-
-  KeyValue *temp = kv, *mid = NULL;
-  int cl = 1;
-  while (1)
+  KeyValue *temp = kv, *mid_kv = NULL;
+  int mid = (start + end) / 2;
+  if (start == end ) {
+      mid_kv = kv;
+  }
+  else
   {
-   if (cl == mid_key) {
-     mid = temp->next;
-     break;
-   }
-   temp = temp->next;
-   cl++;
+      int cl = 0;
+      while (1)
+      {
+        if (start <= cl && cl <= end)
+        {
+          if (cl == mid)
+          {
+            mid_kv = temp->next;
+            break;
+          }
+        }
+        temp = temp->next;
+        cl++;
+      }
   }
 
-  if (mid->key == key) {
-    return mid->value;
-  }
-  
-  int is_tail = key > mid->key;
-  if (is_tail) {
-    kv = mid;
+  if (mid_kv->key == key) {
+    return mid_kv->value; // キーが見つかった場合
+  } else if (mid_kv->key < key) {
+    // 右側を探索
+    return binary_search(kv, key, mid + 1, end);
   } else {
-    temp->next = NULL;
+    // 左側を探索
+    return binary_search(kv, key, start, mid);
   }
-  return binary_search(kv, key);
+}
+
+int search_key(KeyValue *kv, int key) {
+  int length = kvs_length(kv);
+  return binary_search(kv, key, 0, length - 1);
 }
 
 int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, Node *from) {
@@ -286,26 +303,32 @@ int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, No
             while (peer_head->prev != NULL) {
                 peer_head = peer_head->prev;
             }
-            while (peer_head != NULL) {
-                if (removeKeyValue(peer_head->keyvalue, key) == 1) {
+            while (peer_head != NULL)
+            {
+                int removed_kvs = search_key(peer_head->keyvalue, key);
+                if (removed_kvs != -1) // 削除対象のキーがあった場合
+                {
                     KeyValue *keyvalue = malloc(sizeof(KeyValue));
                     keyvalue->key = key;
                     keyvalue->value = from->keyvalue->value;
                     keyvalue->next = NULL;
-                    replaceKeyValue(node->keyvalue, key,keyvalue);
-                    break;
+                    peer_head->keyvalue = replaceKeyValue(peer_head->keyvalue, key, keyvalue); // 削除対象のキーを置き換える。
+                    break; // 一つ見つかれば終了
                 }
-                peer_head = peer_head->next;
+                peer_head = peer_head->next; // 次のノードに移動
             }
             if (node->parent == NULL) {
-                return 1;
+                return 1; // ルートノードだった場合は、終了(一番topまで探索した)
             } else {
                 return delete_from_node(tree, node->parent, key, 1, node);
             }
         }
     } else {
-        if (removeKeyValue(node->keyvalue, key) == 1) {
-            return delete_from_node(tree, node->parent, key, 1, node); 
+        KeyValue *removed_kvs = removeKeyValue(node->keyvalue, key);
+        if (removed_kvs != NULL) 
+        {
+            node->keyvalue = removed_kvs;
+            return delete_from_node(tree, node->parent, key, 1, node);
         }
     }
     printf("error");
@@ -316,7 +339,7 @@ int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, No
 int read(Tree *tree, Node *node, int key) {
     if (node->is_leaf == 1) {
         Node *child_head = node->child; //子ノードの先頭を取得!
-        Node *appled_child= child_head;
+        Node *appled_child = child_head;
         while (child_head != NULL) {
             if (child_head->keyvalue->key <= key) { 
                 if (appled_child->keyvalue->key <= child_head->keyvalue->key) { 
@@ -328,7 +351,8 @@ int read(Tree *tree, Node *node, int key) {
         // 子ノードに橋渡し
         return read(tree, appled_child, key);
     } else {
-        return binary_search(node->keyvalue, key);
+        printf("search: %d\n", node->keyvalue->key);
+        return search_key(node->keyvalue, key);
     }
 }
 
@@ -533,11 +557,13 @@ void draw_tree(Tree *tree) {
 int main() {
     Tree *tree = malloc(sizeof(Tree));
     tree->node_count = 0;
-    insert(tree, 3, 3);
+    insert(tree, 7, 1);
+    insert(tree, 3, 2);
     insert(tree, 2, 3);
     insert(tree, 1, 3);
+    insert(tree, 4, 3);
     draw_tree(tree);
-    printf("read: %d\n", read(tree, tree->root, 2));
+    printf("read: %d\n", read(tree, tree->root, 1));
     // delete(tree, 1);
     draw_tree(tree);
     return 0;
