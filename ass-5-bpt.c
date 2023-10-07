@@ -267,7 +267,7 @@ int binary_search(KeyValue *kv, int key) {
 }
 
 int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, Node *from) {
-    if (node->is_leaf == 1) {
+    if (node->is_leaf == 1 || is_backpropagation == 1) {
         if (is_backpropagation == 0) {
             Node *child_head = node->child; //子ノードの先頭を取得!
             Node *appled_child= child_head;
@@ -293,13 +293,14 @@ int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, No
                     keyvalue->value = from->keyvalue->value;
                     keyvalue->next = NULL;
                     replaceKeyValue(node->keyvalue, key,keyvalue);
-                    if (node->parent == NULL) {
-                        return 1;
-                    } else {
-                        return delete_from_node(tree, node->parent, key, 1, node);
-                    }
+                    break;
                 }
                 peer_head = peer_head->next;
+            }
+            if (node->parent == NULL) {
+                return 1;
+            } else {
+                return delete_from_node(tree, node->parent, key, 1, node);
             }
         }
     } else {
