@@ -445,7 +445,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         while (child != NULL) {
             child->parent = node;
             node->edge_end = max(node->edge_end, child->edge_end);
-
             child = child->next;
         }
         
@@ -461,6 +460,9 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     node->keyvalue = quick_sort(node->keyvalue);
 
     int mid_index = (node_kvs_length+1) / 2; //new_edgeを個足したので+1
+    if (tree->degree % 2 == 0) {
+        mid_index = (node_kvs_length+2) / 2; //new_edgeを個足したので+1
+    }
     KeyValue *temp = node->keyvalue, *spliter = NULL, *mid_keyvalue = NULL;
     int cl = 0;
     while (1) {
@@ -515,6 +517,9 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
    if (node->is_leaf == 1) {
         int node_child_length = nodes_length(node->child);
         int n_mid_index = node_child_length / 2;
+        if (tree->degree % 2 == 0) {
+            n_mid_index = (node_child_length + 1) / 2;
+        }
         Node *n_temp = node->child, *n_spliter = NULL, *mid_child = NULL;
         int ncl = 0;
         while (1) {
