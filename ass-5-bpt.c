@@ -19,6 +19,7 @@ typedef struct Node
     struct Node *prev;
     struct Node *child;
     struct Node *parent;
+    struct Node *edge;
     int is_leaf;
 
     struct KeyValue *keyvalue;
@@ -110,6 +111,20 @@ int kvs_length(KeyValue *head) {
   }
   return cl;
 }
+
+int nodes_length(Node *head) {
+  if (head == NULL) {
+    return -1;
+  }
+  int cl = 1;
+  while (head->next != NULL)
+  {
+    head = head->next;
+    cl++;
+  }
+  return cl;
+}
+
 
 
 KeyValue* quick_sort(KeyValue *s){
@@ -285,13 +300,35 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     new_child_former_node->next = NULL;
     new_child_letter_node->next = NULL;
     connectNodeAsPeer(new_child_former_node, new_child_letter_node);
-    if (node->prev != NULL) {
+    if (node->prev != NULL) { //前のノードがあれば、前のノードとつなぐ。
         node->prev->next = new_child_former_node;
     }
 
     //親子関係を受け継ぐ
-    new_child_former_node->child = node->child;
-    new_child_letter_node->child = node->child;
+   if (node->is_leaf == 1) {
+        int node_child_length = nodes_length(node->child);
+        int n_mid_index = node_child_length / 2;
+        Node *n_temp = node->child, *n_spliter = NULL, *mid_child = NULL;
+        int ncl = 0;
+        while (1) {
+            if (ncl == n_mid_index - 1) {
+                n_spliter = n_temp;
+                mid_child = n_temp->next;
+                break;
+            }
+            n_temp = n_temp->next;
+            ncl++;
+        }
+
+        Node *former_child_head = node->child;
+        Node *latter_child_head = mid_child;
+        n_spliter->next = NULL; // リストを分割する。formerからlaterを切り離す。
+
+        print_nlist(node->child);
+
+        new_child_former_node->child = former_child_head;
+        new_child_letter_node->child = latter_child_head;
+   }
 
     // KV for new leaf (new parent)
     KeyValue *new_mid_keyvalue = malloc(sizeof(KeyValue));
@@ -353,9 +390,26 @@ void draw_tree(Tree *tree) {
             printf(" <key: %d (%d)> ", kvs->key, node->is_leaf);
             kvs = kvs->next;
         }
+        Node *child = node->child;
+        if (child != NULL) {
+            printf(" (");
+            while (child != NULL) {
+                printf("%d,", child->keyvalue->key);
+                child = child->next;
+            }
+            printf(" )");
+        }
         printf("] ");
         if (node->next == NULL) {
             node = node->child;
+
+           if (node != NULL) {
+                Node *child_head = node;
+                while (child_head->prev != NULL) {
+                    child_head = child_head->prev;
+                }
+                node = child_head;
+           }
             printf("\n\n");
         }
         else
