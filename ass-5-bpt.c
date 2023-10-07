@@ -371,7 +371,7 @@ int read(Tree *tree, Node *node, int key) {
     if (node->is_leaf == 1) {
         Node *child_head = node->child; //子ノードの先頭を取得!
         Node *appled_child = child_head;
-        int is_former = key <= node->keyvalue->key;
+        int is_former = key < node->keyvalue->key;
         while (child_head != NULL) {
             if (child_head->keyvalue->key == key) {
                  appled_child = child_head;
@@ -389,7 +389,6 @@ int read(Tree *tree, Node *node, int key) {
             }
             child_head = child_head->next;
         }
-        printf("appled_child: %d\n", appled_child->keyvalue->key);
         // 子ノードに橋渡し
         return read(tree, appled_child, key);
     } else {
