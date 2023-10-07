@@ -26,8 +26,6 @@ typedef struct Node
     struct Node *child;
     struct Node *parent;
     struct Node *link;
-
-    int edge_start;
     int edge_end;
     int is_leaf;
 
@@ -296,7 +294,6 @@ int binary_search(KeyValue *kv, int key, int start, int end) {
 
 int search_key(KeyValue *kv, int key) {
   int length = kvs_length(kv);
-  printf("length: %d\n", length);
   return binary_search(kv, key, 0, length - 1);
 }
 
@@ -383,8 +380,12 @@ int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, No
     return -1;
 }
 
+int delete(Tree *tree, int key) {
+    return delete_from_node(tree, tree->root, key, 0, NULL);
+}
 
-int read(Tree *tree, Node *node, int key) {
+
+int find_node(Tree *tree, Node *node, int key) {
     if (node->is_leaf == 1) {
         Node *child_head = node->child; //子ノードの先頭を取得!
         Node *appled_child = child_head;
@@ -392,30 +393,24 @@ int read(Tree *tree, Node *node, int key) {
         int border = 0;
         while (child_head != NULL)
         {
+            // 子ノードの先頭のキーが挿入するキーより小さい場合は、そこに置く。
             if (border <= key && key <= child_head->edge_end) {
                  appled_child = child_head;
                  break;
             }
-            // if (is_former == 1) {
-            //     if (child_head->keyvalue->key <= appled_child->keyvalue->key) {
-            //         appled_child = child_head;
-            //     }
-
-            // } else {
-            //     if (child_head->keyvalue->key >= appled_child->keyvalue->key) {
-            //         appled_child = child_head;
-            //     }
-            // }
             border = child_head->edge_end;
             child_head = child_head->next;
         }
         // 子ノードに橋渡し
-        printf("%d\n", appled_child->keyvalue->key);
-        return read(tree, appled_child, key);
+        return find_node(tree, appled_child, key);
     } else {
         // return -1;
         return search_key(node->keyvalue, key);
     }
+}
+
+int find(Tree *tree, int key) {
+    return find_node(tree, tree->root, key);
 }
 
 
@@ -432,9 +427,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
             child_head = child_head->next;
         }
         // 子ノードに橋渡し
-        if ( node->edge_start > kvs->key ) {
-            node->edge_start = kvs->key;
-        }
         if (node->edge_end < kvs->key ) {
             node->edge_end = kvs->key;
         }
@@ -449,21 +441,17 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     if (node_kvs_length + 1 < TREE_DEGREE ) {
         node->keyvalue = combineKeyValueStore(node->keyvalue, kvs);
         node->keyvalue = quick_sort(node->keyvalue);
-        node->edge_start = min(node->edge_start, kvs->key);
         node->edge_end = max(node->edge_end, kvs->key);
 
         Node *child = childs_head;
         while (child != NULL) {
             child->parent = node;
-
-            node->edge_start = min(node->edge_start, child->edge_start);
             node->edge_end = max(node->edge_end, child->edge_end);
 
             child = child->next;
         }
         
         if (from != NULL) {
-            node->edge_start = min(node->edge_start, from->edge_start);
             node->edge_end = max(node->edge_end, from->edge_end);
         }
         return 1;
@@ -505,11 +493,8 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     new_parent_node->parent = NULL;
     new_parent_node->child = NULL;
 
-    new_parent_node->edge_start = 0;
     new_parent_node->edge_end = 0;
-    new_child_former_node->edge_start = 0;
     new_child_former_node->edge_end = 0;
-    new_child_letter_node->edge_start = 0;
     new_child_letter_node->edge_end = 0;
 
     //子供にする
@@ -556,7 +541,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         while (f_child != NULL) {
             f_child->parent = new_child_former_node;
 
-            new_child_former_node->edge_start = min(new_child_former_node->edge_start, f_child->edge_start);
             new_child_former_node->edge_end = max(new_child_former_node->edge_end, f_child->edge_end);
 
             f_child = f_child->next;
@@ -566,7 +550,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         while (l_child != NULL) {
             l_child->parent = new_child_letter_node;
 
-            new_child_letter_node->edge_start = min(new_child_letter_node->edge_start, l_child->edge_start);
             new_child_letter_node->edge_end = max(new_child_letter_node->edge_end, l_child->edge_end);
 
             l_child = l_child->next;
@@ -591,19 +574,16 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
 
     KeyValue *f_kvs = new_child_former_node->keyvalue;
     while (f_kvs != NULL) {
-        new_child_former_node->edge_start = min(new_child_former_node->edge_start, f_kvs->key);
         new_child_former_node->edge_end = max(new_child_former_node->edge_end, f_kvs->key);
         f_kvs = f_kvs->next;
     }
 
     KeyValue *l_kvs = new_child_letter_node->keyvalue;
     while (l_kvs != NULL) {
-        new_child_letter_node->edge_start = min(new_child_letter_node->edge_start, l_kvs->key);
         new_child_letter_node->edge_end = max(new_child_letter_node->edge_end, l_kvs->key);
         l_kvs = l_kvs->next;
     }
 
-    new_parent_node->edge_start = min(new_child_former_node->edge_start, new_child_letter_node->edge_start);
     new_parent_node->edge_end = max(new_child_former_node->edge_end, new_child_letter_node->edge_end);
 
     if (node->parent == NULL) {  // 継承先がルートノードだった場合は、ルートノードを更新する。
@@ -623,16 +603,11 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     }
 }
 
-int delete(Tree *tree, int key) {
-    return delete_from_node(tree, tree->root, key, 0, NULL);
-}
-
 int insert(Tree *tree, int key, int value) {
     // 初期状態
     if (tree->root == NULL) {
         Node *node = malloc(sizeof(Node)); // rootノードを作る
         node->is_leaf = 0;
-        node->edge_start = 0;
         node->edge_end = 0;
         node->keyvalue = NULL;
         node->parent = NULL; //rootノードなので親はいない。
@@ -678,7 +653,7 @@ void draw_tree(Tree *tree) {
             }
             printf("");
         }
-        printf("(%d-%d) ] ", node->edge_start, node->edge_end);
+        printf("(max: %d) ] ", node->edge_end);
         if (node->link == NULL) {
             node = layer_head->child;
             layer_head = node;
@@ -699,10 +674,7 @@ int main() {
     }
     draw_tree(tree);
     for (int i = 1; i < 100; i++) {
-        printf("find (key -> %d): %d\n", i, read(tree, tree->root, i));
+        printf("find (key -> %d): %d\n", i, find(tree, i));
     }
-    // printf("find (key -> %d): %d\n", 33, read(tree, tree->root, 33));
-    // delete(tree, 1);
-    //  draw_tree(tree);
     return 0;
 }
