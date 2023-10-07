@@ -334,7 +334,8 @@ int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, No
             if (kvs_length(node->keyvalue) <= 0) {
                 Node* removed_node = removeNode(node->parent->child, node);
                 if (removed_node != NULL) {
-                    node->parent->child = removed_node;
+                    node->parent->child = NULL;
+                    printf("removed_node: %d\n", node->parent);
                 }
                 node->parent = NULL;
             }
@@ -477,6 +478,18 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
 
         new_child_former_node->child = former_child_head;
         new_child_letter_node->child = latter_child_head;
+
+        Node *f_child = new_child_former_node->child;
+        while (f_child != NULL) {
+            f_child->parent = new_child_former_node;
+            f_child = f_child->next;
+        }
+
+        Node *l_child = new_child_letter_node->child;
+        while (l_child != NULL) {
+            l_child->parent = new_child_letter_node;
+            l_child = l_child->next;
+        }
    }
 
     // KV for new leaf (new parent)
@@ -554,7 +567,7 @@ void draw_tree(Tree *tree) {
                 if (child->keyvalue != NULL) {
                     printf("%d,", child->keyvalue->key);
                 } else {
-                    printf("NULL,");
+                    printf("%d,", node);
                 }
                 child = child->next;
             }
