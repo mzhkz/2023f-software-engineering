@@ -533,20 +533,12 @@ void draw_tree(Tree *tree) {
 int main() {
     Tree *tree = malloc(sizeof(Tree));
     tree->node_count = 0;
-    insert(tree, 1, 9);
-    // draw_tree(tree);
-    insert(tree, 2, 8);
-    //  draw_tree(tree);
-    insert(tree, 3, 7);
-    //  draw_tree(tree);
-    insert(tree, 4, 7);
-    // draw_tree(tree);
-    insert(tree, 5, 7);
-    // draw_tree(tree);
-    insert(tree, 6, 71);
+    insert(tree, 3, 3);
+    insert(tree, 2, 3);
+    insert(tree, 1, 3);
     draw_tree(tree);
     printf("read: %d\n", read(tree, tree->root, 2));
-    delete(tree, 6);
+    // delete(tree, 1);
     draw_tree(tree);
     return 0;
 }
