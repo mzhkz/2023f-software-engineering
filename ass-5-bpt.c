@@ -429,11 +429,11 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
             child_head = child_head->next;
         }
         // 子ノードに橋渡し
-        if ( appled_child->edge_start > kvs->key ) {
-            appled_child->edge_start = kvs->key;
+        if ( node->edge_start > kvs->key ) {
+            node->edge_start = kvs->key;
         }
-        if (appled_child->edge_end < kvs->key ) {
-            appled_child->edge_end = kvs->key;
+        if (node->edge_end < kvs->key ) {
+            node->edge_end = kvs->key;
         }
         return insert_node(tree, appled_child, kvs, NULL, 0, NULL);
     }
@@ -446,15 +446,22 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     if (node_kvs_length + 1 < TREE_DEGREE ) {
         node->keyvalue = combineKeyValueStore(node->keyvalue, kvs);
         node->keyvalue = quick_sort(node->keyvalue);
+        node->edge_start = min(node->edge_start, kvs->key);
+        node->edge_end = max(node->edge_end, kvs->key);
+
         Node *child = childs_head;
         while (child != NULL) {
             child->parent = node;
+
+            node->edge_start = min(node->edge_start, child->edge_start);
+            node->edge_end = max(node->edge_end, child->edge_end);
+
             child = child->next;
         }
         
-        if (is_backpropagation == 1) {
+        if (from != NULL) {
             node->edge_start = min(node->edge_start, from->edge_start);
-            node->edge_start = max(node->edge_end, from->edge_end);
+            node->edge_end = max(node->edge_end, from->edge_end);
         }
         return 1;
     }
@@ -495,8 +502,12 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     new_parent_node->parent = NULL;
     new_parent_node->child = NULL;
 
-    
-
+    new_parent_node->edge_start = 0;
+    new_parent_node->edge_end = 0;
+    new_child_former_node->edge_start = 0;
+    new_child_former_node->edge_end = 0;
+    new_child_letter_node->edge_start = 0;
+    new_child_letter_node->edge_end = 0;
 
     //子供にする
     connectNodeAsChild(new_parent_node, new_child_former_node);
@@ -542,8 +553,8 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         while (f_child != NULL) {
             f_child->parent = new_child_former_node;
 
-            // new_child_former_node->edge_start = min(new_child_former_node->edge_start, f_child->edge_start);
-            // new_child_former_node->edge_end = max(new_child_former_node->edge_end, f_child->edge_end);
+            new_child_former_node->edge_start = min(new_child_former_node->edge_start, f_child->edge_start);
+            new_child_former_node->edge_end = max(new_child_former_node->edge_end, f_child->edge_end);
 
             f_child = f_child->next;
         }
@@ -552,14 +563,13 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         while (l_child != NULL) {
             l_child->parent = new_child_letter_node;
 
-            // new_child_letter_node->edge_start = min(new_child_letter_node->edge_start, f_child->edge_start);
-            // new_child_letter_node->edge_end = max(new_child_letter_node->edge_end, f_child->edge_end);
+            new_child_letter_node->edge_start = min(new_child_letter_node->edge_start, l_child->edge_start);
+            new_child_letter_node->edge_end = max(new_child_letter_node->edge_end, l_child->edge_end);
 
             l_child = l_child->next;
         }
-        // new_parent_node->edge_start = min(new_child_former_node->edge_start, new_child_letter_node->edge_start);
-        // new_parent_node->edge_end = max(new_child_former_node->edge_end, new_child_letter_node->edge_end);
-   }
+    }
+
 
     // KV for new leaf (new parent)
     KeyValue *new_mid_keyvalue = malloc(sizeof(KeyValue));
@@ -575,6 +585,23 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     new_child_letter_node->keyvalue = latter_keyvalue_head;
     new_child_former_node->is_leaf = node->is_leaf;
     new_child_letter_node->is_leaf = node->is_leaf;
+
+    KeyValue *f_kvs = new_child_former_node->keyvalue;
+    while (f_kvs != NULL) {
+        new_child_former_node->edge_start = min(new_child_former_node->edge_start, f_kvs->key);
+        new_child_former_node->edge_end = max(new_child_former_node->edge_end, f_kvs->key);
+        f_kvs = f_kvs->next;
+    }
+
+    KeyValue *l_kvs = new_child_letter_node->keyvalue;
+    while (l_kvs != NULL) {
+        new_child_letter_node->edge_start = min(new_child_letter_node->edge_start, l_kvs->key);
+        new_child_letter_node->edge_end = max(new_child_letter_node->edge_end, l_kvs->key);
+        l_kvs = l_kvs->next;
+    }
+
+    new_parent_node->edge_start = min(new_child_former_node->edge_start, new_child_letter_node->edge_start);
+    new_parent_node->edge_end = max(new_child_former_node->edge_end, new_child_letter_node->edge_end);
 
     if (node->parent == NULL) {  // 継承先がルートノードだった場合は、ルートノードを更新する。
         tree->root = new_parent_node;
@@ -602,6 +629,8 @@ int insert(Tree *tree, int key, int value) {
     if (tree->root == NULL) {
         Node *node = malloc(sizeof(Node)); // rootノードを作る
         node->is_leaf = 0;
+        node->edge_start = 0;
+        node->edge_end = 0;
         node->keyvalue = NULL;
         node->parent = NULL; //rootノードなので親はいない。
         node->child = NULL;
@@ -662,7 +691,7 @@ void draw_tree(Tree *tree) {
 int main() {
     Tree *tree = malloc(sizeof(Tree));
     tree->node_count = 0;
-    for (int i = 1; i < 100; i++) {
+    for (int i = 1; i < 4; i++) {
         insert(tree, i, i * 2);
     }
     // // draw_tree(tree);
