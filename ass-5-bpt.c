@@ -185,6 +185,43 @@ KeyValue* quick_sort(KeyValue *s){
   return combineKeyValueStore(combineKeyValueStore(quick_sort(q_start), s), quick_sort(p_start));
 }
 
+int binary_search(KeyValue *kv, int key) {
+  // aes sortは実装済みとする
+  int lengh = kvs_length(kv);
+  if (lengh <= 1) {
+    if (kv != NULL && kv->key == key) {
+      return kv->value;
+    }
+    return -1;
+  }
+
+  int mid_key = lengh / 2;
+
+  KeyValue *temp = kv, *mid = NULL;
+  int cl = 1;
+  while (1)
+  {
+   if (cl == mid_key) {
+     mid = temp->next;
+     break;
+   }
+   temp = temp->next;
+   cl++;
+  }
+
+  if (mid->key == key) {
+    return mid->value;
+  }
+  
+  int is_tail = key > mid->key;
+  if (is_tail) {
+    kv = mid;
+  } else {
+    temp->next = NULL;
+  }
+  return binary_search(kv, key);
+}
+
 
 void print_nlist(Node *s) {
   while (1)
@@ -208,6 +245,25 @@ void print_list(KeyValue *s) {
     s = s->next;
   }
    printf("\n");
+}
+
+int read(Tree *tree, Node *node, int key) {
+    if (node->is_leaf == 1) {
+        Node *child_head = node->child; //子ノードの先頭を取得!
+        Node *appled_child= child_head;
+        while (child_head != NULL) {
+            if (child_head->keyvalue->key < key) { //子ノードの先頭のキーが挿入するキーより小さい場合は、そこに置く。
+                if (appled_child->keyvalue->key < child_head->keyvalue->key) { //appled_child_nodeのキーがchild_node_headのキーより大きい場合は、appled_child_nodeを更新する。
+                        appled_child = child_head;
+                }
+            } 
+            child_head = child_head->next;
+        }
+        // 子ノードに橋渡し
+        return read(tree, appled_child, key);
+    } else {
+        return binary_search(node->keyvalue, key);
+    }
 }
 
 
@@ -278,23 +334,10 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     Node *new_child_former_node = malloc(sizeof(Node));
     Node *new_child_letter_node = malloc(sizeof(Node));
 
-    // char name[50];
-    // sprintf(name, "parent: %d", tree->node_count);
-    // new_parent_node->name = name;
-
-    // tree->node_count += 1;
-    // sprintf(name, "child: %d for %s", tree->node_count, new_parent_node->name);
-    // new_parent_node->name = name;
-    // tree->node_count += 1;
-    // sprintf(name, "child: %d for %s", tree->node_count, new_parent_node->name);
-    // new_parent_node->name = name;
-    // tree->node_count += 1;
-
     //init
     new_parent_node->parent = NULL;
     new_parent_node->child = NULL;
 
-    // new_parent_node->name = "";
 
     //子供にする
     connectNodeAsChild(new_parent_node, new_child_former_node);
@@ -439,5 +482,6 @@ int main() {
     draw_tree(tree);
     insert(tree, 6, 71);
     draw_tree(tree);
+    printf("read: %d\n", read(tree, tree->root, 6));
     return 0;
 }
