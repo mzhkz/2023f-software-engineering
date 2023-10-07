@@ -26,6 +26,18 @@ typedef struct tree
     Node *root;
 } Tree;
 
+void print_nlist(Node *s) {
+  while (1)
+  {
+    if (s == NULL) {
+      return;
+    }
+    printf("%d ", s->kvs_head->key);
+    s = s->next;
+  }
+   printf("\n");
+}
+
 
 void print_list(KVS *s) {
   while (1)
@@ -64,6 +76,27 @@ KVS* combine(KVS *p, KVS *q) {
   }
 
   KVS *s = p;
+
+  // リストの末尾を見つけるためにループを使う必要はありません
+  while (p->next != NULL) {
+    p = p->next;
+  }
+
+  p->next = q;
+  return s;
+}
+
+Node* combineNode(Node *p, Node *q) {
+  if (p == NULL)
+  {
+    return q;
+  }
+  else if (q == NULL)
+  {
+    return p;
+  }
+
+  Node *s = p;
 
   // リストの末尾を見つけるためにループを使う必要はありません
   while (p->next != NULL) {
@@ -134,20 +167,19 @@ int insert_kvs_to_node(Tree *tree, Node *node, Node* entry, int is_backpropagati
     // 初期状態 or 探索してエッジまでたどり着いた。
     if (node->kvs_head == NULL || node->kvs_head->is_leaf == 0 || is_backpropagation == 1) {
         if (kl + 1 < TREE_DEGREE ) { //一個足すので
-            KVS *kvs = malloc(sizeof(KVS));
-            kvs->key = entry->kvs_head->key;
-            kvs->value = entry->kvs_head->value;
-            kvs->next = NULL;
+            KVS *kvs = entry->kvs_head;
             kvs->is_leaf = is_backpropagation;
             node->kvs_head = combine(node->kvs_head, kvs);
-
             Node *child = entry->childs; //combineするときに親を更新
-            while (child != NULL)
-            {
-               child->parent = node;
-               child = child->next;
-            }
-            
+            printf("combine\n");
+            print_nlist(child);
+            // while (child != NULL) {
+            //     child->parent = node;
+            //     combineNode(node->childs, child);
+            //     child = child->next;
+            // }
+            entry->childs = NULL;
+
             return 1;
         } else {
             printf("make leaf and expand edges: %d\n", is_backpropagation);
@@ -206,13 +238,15 @@ int insert_kvs_to_node(Tree *tree, Node *node, Node* entry, int is_backpropagati
             node->parent = new_node_parent;
             new_node_child_letter->parent = new_node_parent;
             new_node_parent->childs = node;
+            new_node_parent->childs = node;
             new_node_parent->childs->next = new_node_child_letter;
+            new_node_child_letter->next = NULL;
 
             //子ノード横の関係を持たせる
             node->prev = NULL;
             node->next = new_node_child_letter; 
             new_node_child_letter->prev = node;
-            new_node_child_letter->next = NULL;
+
 
             // 子ノードのchildを初期化
             node->childs = NULL;
@@ -226,6 +260,10 @@ int insert_kvs_to_node(Tree *tree, Node *node, Node* entry, int is_backpropagati
                 new_node_parent->next = prev_node;
                 new_node_parent->prev = next_node;
             } else { //すでにあればマージする。
+                printf("merge\n");
+                print_nlist(before_parent->childs);
+                printf("new child\n");
+                print_nlist(new_node_parent->childs);
                 insert_kvs_to_node(tree, before_parent, new_node_parent, 1);
             }
 
@@ -293,14 +331,18 @@ void draw_tree(Tree *tree) {
 }
 
 
+
 int main() {
     Tree *tree = malloc(sizeof(Tree));
     insert(tree, 1, 9);
+     draw_tree(tree);
     insert(tree, 2, 8);
+     draw_tree(tree);
     insert(tree, 3, 7);
+     draw_tree(tree);
     insert(tree, 4, 7);
+    draw_tree(tree);
     insert(tree, 5, 7);
-    // insert(tree, 100, 8);
     draw_tree(tree);
     return 0;
 }
