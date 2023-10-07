@@ -19,7 +19,7 @@ typedef struct Node
     struct Node *prev;
     struct Node *child;
     struct Node *parent;
-    struct Node *edge;
+    struct Node *link;
     int is_leaf;
 
     struct KeyValue *keyvalue;
@@ -30,6 +30,15 @@ typedef struct Tree
     Node *root;
     int node_count;
 } Tree;
+
+int connectNodeAsLink(Node *head, Node *q) {
+    Node *p = head;
+    while (p->link != NULL) {
+        p = p->link;
+    }
+    p->link = q;
+    return 0;
+}
 
 int connectNodeAsPeer(Node *head, Node *q) {
     Node *p = head;
@@ -203,10 +212,6 @@ void print_list(KeyValue *s) {
 
 
 int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is_backpropagation) {
-    // if (is_backpropagation == 1) {
-    //         printf("backpropagation %d;\n", node);
-    //         // return 1;
-    //  }
     if (node->is_leaf == 1 && is_backpropagation == 0) {
         Node *child_head = node->child; //子ノードの先頭を取得!
         Node *appled_child= child_head;
@@ -300,8 +305,10 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     new_child_former_node->next = NULL;
     new_child_letter_node->next = NULL;
     connectNodeAsPeer(new_child_former_node, new_child_letter_node);
+    connectNodeAsLink(new_child_former_node, new_child_letter_node); //描写用のリンク
     if (node->prev != NULL) { //前のノードがあれば、前のノードとつなぐ。
         node->prev->next = new_child_former_node;
+        node->prev->link = new_child_former_node;
     }
 
     //親子関係を受け継ぐ
@@ -369,6 +376,7 @@ void insert(Tree *tree, int key, int value) {
         node->child = NULL;
         node->next = NULL;
         node->prev = NULL;
+        node->link = NULL;
         tree->root = node;
     }
     // 木の中に挿入する。
