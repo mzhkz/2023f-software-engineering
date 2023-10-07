@@ -298,7 +298,7 @@ int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, No
             }
             // 子ノードに橋渡し
             return delete_from_node(tree, appled_child, key, 0, NULL);
-        } else {
+        } else { // バックプロパゲーション
             Node *peer_head = node;
             while (peer_head->prev != NULL) {
                 peer_head = peer_head->prev;
@@ -324,11 +324,23 @@ int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, No
             }
         }
     } else {
-        KeyValue *removed_kvs = removeKeyValue(node->keyvalue, key);
-        if (removed_kvs != NULL) 
+        int is_exist = search_key(node->keyvalue, key);
+        if (is_exist != -1) 
         {
+            KeyValue *removed_kvs = removeKeyValue(node->keyvalue, key);
             node->keyvalue = removed_kvs;
-            return delete_from_node(tree, node->parent, key, 1, node);
+
+            // 削除後のノードが空だった場合は、削除する。
+            if (kvs_length(node->keyvalue) <= 0) {
+                Node* removed_node = removeNode(node->parent->child, node);
+                if (removed_node != NULL) {
+                    node->parent->child = removed_node;
+                }
+                node->parent = NULL;
+            }
+
+            return 1;
+            // return delete_from_node(tree, node->parent, key, 1, node);
         }
     }
     printf("error");
@@ -539,7 +551,11 @@ void draw_tree(Tree *tree) {
         if (child != NULL) {
             printf(" (");
             while (child != NULL) {
-                printf("%d,", child->keyvalue->key);
+                if (child->keyvalue != NULL) {
+                    printf("%d,", child->keyvalue->key);
+                } else {
+                    printf("NULL,");
+                }
                 child = child->next;
             }
             printf(" )");
@@ -560,15 +576,14 @@ void draw_tree(Tree *tree) {
 int main() {
     Tree *tree = malloc(sizeof(Tree));
     tree->node_count = 0;
-    insert(tree, 7, 1);
-    insert(tree, 3, 2);
-    insert(tree, 2, 3);
-    insert(tree, 1, 8);
-    insert(tree, 4, 3);
-    insert(tree, 9, 34);
+    insert(tree, 1, 1);
+    insert(tree, 2, 2);
+    insert(tree, 3, 3);
+    insert(tree, 4, 8);
+    insert(tree, 5, 3);
     draw_tree(tree);
     printf("read: %d\n", read(tree, tree->root, 1));
-    // delete(tree, 1);
+    delete(tree, 1);
     draw_tree(tree);
     return 0;
 }
