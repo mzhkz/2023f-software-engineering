@@ -75,7 +75,7 @@ Node* removeNode(Node *head, Node *q) {
         return NULL;
     } else {
         Node *p = head;
-         while (p->next != NULL) {
+        while (p->next != NULL) {
         // while (p != NULL) {
             if (p == q) {
                 if (p->prev == NULL) {
@@ -390,10 +390,13 @@ int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, No
 int read(Tree *tree, Node *node, int key) {
     if (node->is_leaf == 1) {
         Node *child_head = node->child; //子ノードの先頭を取得!
-        Node *appled_child = child_head;
+        Node *appled_child = NULL;
         while (child_head != NULL) {
-            if (child_head->keyvalue->key <= key) { 
-                if (appled_child->keyvalue->key <= child_head->keyvalue->key) { 
+            if (child_head->keyvalue->key >= key) { 
+                if (appled_child == NULL) {
+                    appled_child = child_head;
+                }
+                if (appled_child->keyvalue->key > child_head->keyvalue->key) { 
                         appled_child = child_head;
                 }
             } 
@@ -402,7 +405,6 @@ int read(Tree *tree, Node *node, int key) {
         // 子ノードに橋渡し
         return read(tree, appled_child, key);
     } else {
-        printf("search: %d\n", node->keyvalue->key);
         return search_key(node->keyvalue, key);
     }
 }
@@ -629,12 +631,11 @@ int main() {
     tree->node_count = 0;
     insert(tree, 1, 1001);
     insert(tree, 2, 2);
-    insert(tree, 3, 3);
+    insert(tree, 3, 33);
     insert(tree, 4, 8);
     insert(tree, 5, 3);
     draw_tree(tree);
-    printf("read: %d\n", read(tree, tree->root, 1));
+    printf("find: %d\n", read(tree, tree->root, 3));
     // delete(tree, 1);
-    draw_tree(tree);
     return 0;
 }
