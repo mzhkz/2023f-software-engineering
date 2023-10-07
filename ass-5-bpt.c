@@ -300,25 +300,6 @@ int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, No
             return delete_from_node(tree, appled_child, key, 0, NULL);
         } else { // バックプロパゲーション
             Node *previous_parent = node->parent;
-            // Node *peer_head = node;
-            // while (peer_head->prev != NULL)
-            // {
-            //     peer_head = peer_head->prev;
-            // }
-            // while (peer_head != NULL)
-            // {
-            //     int removed_kvs = search_key(peer_head->keyvalue, key);
-            //     if (removed_kvs != -1) // 削除対象のキーがあった場合
-            //     {
-            //         KeyValue *keyvalue = malloc(sizeof(KeyValue));
-            //         keyvalue->key = key;
-            //         keyvalue->value = from->keyvalue->value;
-            //         keyvalue->next = NULL;
-            //         peer_head->keyvalue = replaceKeyValue(peer_head->keyvalue, key, keyvalue); // 削除対象のキーを置き換える。
-            //         break; // 一つ見つかれば終了
-            //     }
-            //     peer_head = peer_head->next; // 次のノードに移動
-            // }
 
             // leafノードのchild1だった場合は、削除する。
             if (node->is_leaf == 1 && kvs_length(node->keyvalue) <= 1) {
@@ -343,18 +324,17 @@ int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, No
                         node->parent->parent = NULL;
                     }
                 }
-                // // 子供の親を削除する。
-                // Node *f_child = node->child;
-                // while (f_child != NULL) {
-                //      // ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
-                //     Node* removed_node = removeNode(node->child, f_child);
-                //     node->child = removed_node;
-                //     f_child->parent = node->parent;
-                //     connectNodeAsChild(node->parent, f_child);
-                //     f_child = f_child->next;
-                // }
-                // node->child = NULL;
-                
+                // 子供の親を削除する。
+                Node *f_child = node->child;
+                while (f_child != NULL) {
+                     // ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
+                    Node* removed_node = removeNode(node->child, f_child);
+                    node->child = removed_node;
+                    f_child->parent = node->parent;
+                    connectNodeAsChild(node->parent, f_child);
+                    f_child = f_child->next;
+                }
+                node->child = NULL;
             }
 
             if (node->parent == NULL) {
@@ -390,18 +370,26 @@ int delete_from_node(Tree *tree, Node *node, int key, int is_backpropagation, No
 int read(Tree *tree, Node *node, int key) {
     if (node->is_leaf == 1) {
         Node *child_head = node->child; //子ノードの先頭を取得!
-        Node *appled_child = NULL;
+        Node *appled_child = child_head;
+        int is_former = key <= node->keyvalue->key;
         while (child_head != NULL) {
-            if (child_head->keyvalue->key >= key) { 
-                if (appled_child == NULL) {
+            if (child_head->keyvalue->key == key) {
+                 appled_child = child_head;
+                 break;
+            }
+            if (is_former == 1) {
+                if (child_head->keyvalue->key <= appled_child->keyvalue->key) {
                     appled_child = child_head;
                 }
-                if (appled_child->keyvalue->key > child_head->keyvalue->key) { 
-                        appled_child = child_head;
+
+            } else {
+                 if (child_head->keyvalue->key > appled_child->keyvalue->key) {
+                    appled_child = child_head;
                 }
-            } 
+            }
             child_head = child_head->next;
         }
+        printf("appled_child: %d\n", appled_child->keyvalue->key);
         // 子ノードに橋渡し
         return read(tree, appled_child, key);
     } else {
@@ -635,7 +623,9 @@ int main() {
     insert(tree, 4, 8);
     insert(tree, 5, 3);
     draw_tree(tree);
-    printf("find: %d\n", read(tree, tree->root, 3));
+    for (int i = 1; i < 6; i++) {
+        printf("find: %d\n", read(tree, tree->root, i));
+    }
     // delete(tree, 1);
     return 0;
 }
