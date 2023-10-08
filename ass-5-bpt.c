@@ -1,11 +1,20 @@
+/**
+
+B+tree (insert and find)
+
+Input and Output:
+Input:
+Output: 
+
+Explanation of my code:
+B+treeをオレオレリスト構造を用いて実装しました。
+配列は使っていません。
+**/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-// 最小値を返すマクロ
-#define min(a, b) ((a) < (b) ? (a) : (b))
-
-// 最大値を返すマクロ
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
 typedef struct KeyValue
@@ -73,7 +82,6 @@ Node* removeNode(Node *head, Node *q) {
         return NULL;
     } else {
         Node *p = head;
-        // while (p->next != NULL) {
         while (p != NULL) {
             if (p == q) {
                 if (p->prev == NULL) {
@@ -604,13 +612,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         new_child_letter_node->edge_end = max(new_child_letter_node->edge_end, l_kvs->key);
         l_kvs = l_kvs->next;
     }
-
     new_parent_node->edge_end = max(new_child_former_node->edge_end, new_child_letter_node->edge_end);
-
-    if (node->prev != NULL) {
-        printf("prev %d\n", node->prev->name);
-        printf("prev->next %d\n", node->prev->next->name);
-    }
 
     if (node->parent == NULL) {  // 継承先がルートノードだった場合は、ルートノードを更新する。
         tree->root = new_parent_node;
@@ -619,13 +621,12 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         // 親ノードの横関係を持たせる（nodeから継承）
         Node *previous_parent = node->parent;
 
-        // ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
-        // Node* removed_node = removeNode(node->parent->child, node);
-        // if (removed_node != NULL) {
-        //     node->parent->child = removed_node;
-        // }
+        //ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
+        Node* removed_node = removeNode(node->parent->child, node);
+        if (removed_node != NULL) {
+            node->parent->child = removed_node;
+        }
         node->parent = NULL;
-        // return 1;
         return insert_node(tree, previous_parent, new_parent_node->keyvalue, new_parent_node->child, 1, node);
     }
 }
@@ -654,7 +655,7 @@ int insert(Tree *tree, int key, int value) {
 }
 
 void draw_tree(Tree *tree) {
-    printf("##### Draw B+Tree #######\n\n");
+    printf("##### Render B+Tree (degree: %d) #######\n\n", tree->degree);
     Node *node = tree->root;
     Node *layer_head = node;
     while (node != NULL) {
@@ -700,25 +701,27 @@ void draw_tree(Tree *tree) {
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        // プログラム実行時に引数が正しく渡されなかった場合のエラーメッセージ
         printf("Usage: %s <degree> <size>\n", argv[0]);
-        return 1; // エラーコードを返してプログラムを終了
+        return 1;
     }
 
-    int degree = atoi(argv[1]); // コマンドライン引数を整数に変換
-    int size = atoi(argv[2]); // コマンドライン引数を整数に変換
+    int degree = atoi(argv[1]); 
+    int size = atoi(argv[2]); 
 
-    printf("size: %d\n", size);
+    if (degree != 3) {
+        printf("Usage: [degree] must be more than equal 3, you selected %d.\n", degree);
+        return 1;
+    }
+
     Tree *tree = malloc(sizeof(Tree));
     tree->degree = degree;
     for (int i = 1; i < size + 1; i++)
     {
         insert(tree, i, i * 2);
-        draw_tree(tree);
     }
-    // draw_tree(tree);
-    for (int i = 1; i < size * 2; i++) {
-        printf("find (key -> %d): %d\n", i, find(tree, i));
+    draw_tree(tree);
+    for (int i = -5; i < size * 2; i++) {
+        printf("find (key-> %d): %d\n", i, find(tree, i));
     }
     return 0;
 }
