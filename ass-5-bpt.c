@@ -395,8 +395,12 @@ int find_node(Tree *tree, Node *node, int key) {
         // 子ノードに橋渡し
         return find_node(tree, appled_child, key);
     } else {
-        // return -1;
-        return search_key(node->keyvalue, key);
+        int result = search_key(node->keyvalue, key);
+        // leaf node 次の子のノードに橋渡し
+        if (result == -1 && node->leaf_conn != NULL) {
+             return find_node(tree, node->leaf_conn, key);
+        }
+        return result;
     }
 }
 
@@ -502,17 +506,29 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     new_child_letter_node->next = NULL;
     connectNodeAsPeer(new_child_former_node, new_child_letter_node);
     connectNodeAsLink(new_child_former_node, new_child_letter_node); //描写用のリンク
-   
+    
+    if (node->is_leaf == 0) {
+        new_child_former_node->leaf_conn = new_child_letter_node;
+    }
+
     if (node->prev != NULL)
     { // 前のノードがあれば、前のノードとつなぐ。
         node->prev->link = new_child_former_node;
         node->prev->next = new_child_former_node;
         new_child_former_node->prev = node->prev;
+
+        if (node->is_leaf == 0) {
+            node->prev->leaf_conn = new_child_former_node;
+        }
     }
 
     if (node->next != NULL) {
         node->next->prev = new_child_letter_node;
         new_child_letter_node->next = node->next;
+
+        if (node->is_leaf == 0) {
+            new_child_letter_node->leaf_conn = node->next;
+        }
     }
 
     //親子関係を受け継ぐ
@@ -642,7 +658,7 @@ void draw_tree(Tree *tree) {
     Node *node = tree->root;
     Node *layer_head = node;
     while (node != NULL) {
-        printf(" [ %d", node->name);
+        printf(" [ id: %d, kvs:", node->name);
         KeyValue *kvs = node->keyvalue;
         while (kvs != NULL) {
             if (node->is_leaf == 1) {
@@ -652,9 +668,13 @@ void draw_tree(Tree *tree) {
             }
             kvs = kvs->next;
         }
-        Node *child = node->next;
+        Node *peer = node->leaf_conn;
+        if (peer != NULL) {
+            printf(", peer: %d ", peer->name);
+        }
+        Node *child = node->child;
         if (child != NULL) {
-            printf(" branch:");
+            printf(", childs:");
             while (child != NULL) {
                 if (child->keyvalue != NULL) {
                     printf("%d,", child->name);
@@ -665,7 +685,7 @@ void draw_tree(Tree *tree) {
             }
             printf("");
         }
-        printf("(max: %d) ] ", node->edge_end);
+        printf(" (border: %d) ] ", node->edge_end);
         if (node->link == NULL) {
             node = layer_head->child;
             layer_head = node;
