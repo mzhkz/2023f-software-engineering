@@ -86,11 +86,17 @@ Node* removeNode(Node *head, Node *q) {
             if (p == q) {
                 if (p->prev == NULL) {
                     head = p->next;
-                    p->next->prev = NULL;
+                    if (head != NULL) {
+                        p->next->prev = NULL;
+                    }
                 } else {
                     p->prev->next = p->next;
-                    p->next->prev = p->prev;
+                    if (p->next != NULL) {
+                        p->next->prev = p->prev;
+                    }
                 }
+                q->next = NULL;
+                q->prev = NULL;
                 return head;
             }
             p = p->next;
@@ -399,9 +405,11 @@ int find_node(Tree *tree, Node *node, int key) {
             border = child_head->edge_end;
             child_head = child_head->next;
         }
+        printf("appled: %d\n", appled_child->name);
         // 子ノードに橋渡し
         return find_node(tree, appled_child, key);
     } else {
+        printf("get: %d\n", node->keyvalue->key);
         return search_key(node->keyvalue, key);
     }
 }
@@ -417,11 +425,11 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         Node *child_head = node->child; //子ノードの先頭を取得!
         Node *appled_child= child_head;
         while (child_head != NULL) {
-            if (child_head->keyvalue->key < kvs->key) { //子ノードの先頭のキーが挿入するキーより小さい場合は、そこに置く。
-                if (appled_child->keyvalue->key < child_head->keyvalue->key) { //appled_child_nodeのキーがchild_node_headのキーより大きい場合は、appled_child_nodeを更新する。
-                        appled_child = child_head;
+            if (kvs->key > child_head->keyvalue->key) {
+                if (appled_child->edge_end <= child_head->edge_end) {
+                    appled_child = child_head;
                 }
-            } 
+            }
             child_head = child_head->next;
         }
         // 子ノードに橋渡し
@@ -437,9 +445,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     int node_kvs_length = kvs_length(node->keyvalue);
 
     node->keyvalue = combineKeyValueStore(node->keyvalue, kvs);
-    // printf("length #1: %d for %d\n", kvs_length(node->keyvalue), kvs->key);
     node->keyvalue = quick_sort(node->keyvalue);
-    // printf("length #2: %d for %d\n", kvs_length(node->keyvalue), kvs->key);
 
     // 対象のノードがあいていた場合
     if (node_kvs_length + 1 < tree->degree ) {
@@ -636,10 +642,10 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         Node *previous_parent = node->parent;
 
         //ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
-        // Node* removed_node = removeNode(node->parent->child, node);
-        // if (removed_node != NULL) {
-        //     node->parent->child = removed_node;
-        // }
+        Node* removed_node = removeNode(node->parent->child, node);
+        if (removed_node != NULL) {
+            node->parent->child = removed_node;
+        }
         node->parent = NULL;
         return insert_node(tree, previous_parent, new_parent_node->keyvalue, new_parent_node->child, 1, node);
     }
@@ -673,20 +679,20 @@ void draw_tree(Tree *tree) {
     Node *node = tree->root;
     Node *layer_head = node;
     while (node != NULL) {
-        printf(" [ id: %d, kvs:", node->name);
-        KeyValue *kvs = node->keyvalue;
-        while (kvs != NULL) {
-            if (node->is_leaf == 1) {
-                printf(" <key:%d, is_leaf)> ", kvs->key);
-            } else {
-                printf(" <key:%d, val:%d)> ", kvs->key, kvs->value);
-            }
-            kvs = kvs->next;
-        }
-        Node *peer = node->leaf_conn;
-        if (peer != NULL) {
-            printf(", peer: %d ", peer->name);
-        }
+        printf(" [ id: %d, ", node->name);
+        // KeyValue *kvs = node->keyvalue;
+        // while (kvs != NULL) {
+        //     if (node->is_leaf == 1) {
+        //         printf(" <key:%d, is_leaf)> ", kvs->key);
+        //     } else {
+        //         printf(" <key:%d, val:%d)> ", kvs->key, kvs->value);
+        //     }
+        //     kvs = kvs->next;
+        // }
+        // Node *peer = node->leaf_conn;
+        // if (peer != NULL) {
+        //     printf(", peer: %d ", peer->name);
+        // }
         Node *child = node->child;
         if (child != NULL) {
             printf(", childs:");
