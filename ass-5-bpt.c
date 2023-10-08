@@ -18,12 +18,13 @@ typedef struct KeyValue
 
 typedef struct Node
 {
-    char *name;
+    int name;
     struct Node *next;
     struct Node *prev;
     struct Node *child;
     struct Node *parent;
     struct Node *link;
+    struct Node *leaf_conn;
     int edge_end;
     int is_leaf;
 
@@ -59,15 +60,7 @@ int connectNodeAsChild(Node *head, Node *q) {
     if (head->child == NULL) {
         head->child = q;
     } else {
-        if (head->child == NULL) {
-            head->child = q;
-        } else {
-            Node *tail = head->child;
-            while (tail->next != NULL) {
-                tail = tail->next;
-            }
-            tail->next = q;
-        }
+        connectNodeAsPeer(head->child, q);
     }
     q->parent = head;
 
@@ -80,8 +73,8 @@ Node* removeNode(Node *head, Node *q) {
         return NULL;
     } else {
         Node *p = head;
-        while (p->next != NULL) {
-        // while (p != NULL) {
+        // while (p->next != NULL) {
+        while (p != NULL) {
             if (p == q) {
                 if (p->prev == NULL) {
                     head = p->next;
@@ -435,10 +428,11 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     // ノードに挿入
     int node_kvs_length = kvs_length(node->keyvalue);
 
+    node->keyvalue = combineKeyValueStore(node->keyvalue, kvs);
+    node->keyvalue = quick_sort(node->keyvalue);
+
     // 対象のノードがあいていた場合
     if (node_kvs_length + 1 < tree->degree ) {
-        node->keyvalue = combineKeyValueStore(node->keyvalue, kvs);
-        node->keyvalue = quick_sort(node->keyvalue);
         node->edge_end = max(node->edge_end, kvs->key);
 
         Node *child = childs_head;
@@ -456,8 +450,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
 
     // 対象のノードがいっぱいだった場合
     kvs->next = NULL;
-    node->keyvalue = combineKeyValueStore(node->keyvalue, kvs);
-    node->keyvalue = quick_sort(node->keyvalue);
 
     int mid_index = (node_kvs_length+1) / 2; //new_edgeを個足したので+1
     if (tree->degree % 2 == 0) {
@@ -490,6 +482,9 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     Node *new_child_letter_node = malloc(sizeof(Node));
 
     //init
+    new_parent_node->name = rand();
+    new_child_former_node->name = rand();
+    new_child_letter_node->name = rand();
     new_parent_node->parent = NULL;
     new_parent_node->child = NULL;
 
@@ -507,17 +502,24 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     new_child_letter_node->next = NULL;
     connectNodeAsPeer(new_child_former_node, new_child_letter_node);
     connectNodeAsLink(new_child_former_node, new_child_letter_node); //描写用のリンク
+   
     if (node->prev != NULL)
     { // 前のノードがあれば、前のノードとつなぐ。
-        node->prev->next = new_child_former_node;
         node->prev->link = new_child_former_node;
+        node->prev->next = new_child_former_node;
+        new_child_former_node->prev = node->prev;
+    }
+
+    if (node->next != NULL) {
+        node->next->prev = new_child_letter_node;
+        new_child_letter_node->next = node->next;
     }
 
     //親子関係を受け継ぐ
    if (node->is_leaf == 1) {
         int node_child_length = nodes_length(node->child);
         int n_mid_index = node_child_length / 2;
-        if (tree->degree % 2 == 0) {
+        if (tree->degree % 2 == 0) { //偶数の場合
             n_mid_index = (node_child_length + 1) / 2;
         }
         Node *n_temp = node->child, *n_spliter = NULL, *mid_child = NULL;
@@ -589,6 +591,11 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
 
     new_parent_node->edge_end = max(new_child_former_node->edge_end, new_child_letter_node->edge_end);
 
+    if (node->prev != NULL) {
+        printf("prev %d\n", node->prev->name);
+        printf("prev->next %d\n", node->prev->next->name);
+    }
+
     if (node->parent == NULL) {  // 継承先がルートノードだった場合は、ルートノードを更新する。
         tree->root = new_parent_node;
         return 1;
@@ -597,11 +604,12 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         Node *previous_parent = node->parent;
 
         // ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
-        Node* removed_node = removeNode(node->parent->child, node);
-        if (removed_node != NULL) {
-            node->parent->child = removed_node;
-        }
+        // Node* removed_node = removeNode(node->parent->child, node);
+        // if (removed_node != NULL) {
+        //     node->parent->child = removed_node;
+        // }
         node->parent = NULL;
+        // return 1;
         return insert_node(tree, previous_parent, new_parent_node->keyvalue, new_parent_node->child, 1, node);
     }
 }
@@ -618,6 +626,7 @@ int insert(Tree *tree, int key, int value) {
         node->next = NULL;
         node->prev = NULL;
         node->link = NULL;
+        node->name = rand();
         tree->root = node;
     }
     // 木の中に挿入する。
@@ -633,7 +642,7 @@ void draw_tree(Tree *tree) {
     Node *node = tree->root;
     Node *layer_head = node;
     while (node != NULL) {
-        printf(" [");
+        printf(" [ %d", node->name);
         KeyValue *kvs = node->keyvalue;
         while (kvs != NULL) {
             if (node->is_leaf == 1) {
@@ -643,12 +652,12 @@ void draw_tree(Tree *tree) {
             }
             kvs = kvs->next;
         }
-        Node *child = node->child;
+        Node *child = node->next;
         if (child != NULL) {
             printf(" branch:");
             while (child != NULL) {
                 if (child->keyvalue != NULL) {
-                    printf("%d,", child->keyvalue->key);
+                    printf("%d,", child->name);
                 } else {
                     printf("NULL,");
                 }
@@ -685,8 +694,9 @@ int main(int argc, char *argv[]) {
     for (int i = 1; i < size + 1; i++)
     {
         insert(tree, i, i * 2);
+        draw_tree(tree);
     }
-    draw_tree(tree);
+    // draw_tree(tree);
     for (int i = 1; i < size * 2; i++) {
         printf("find (key -> %d): %d\n", i, find(tree, i));
     }
