@@ -461,8 +461,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     }
 
     // 対象のノードがいっぱいだった場合
-    kvs->next = NULL;
-
     int mid_index = (node_kvs_length+1) / 2; //new_edgeを個足したので+1
     if (tree->degree % 2 == 0) {
         mid_index = (node_kvs_length+2) / 2; //new_edgeを個足したので+1
@@ -478,27 +476,28 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         temp = temp->next;
         cl++;
     }
-
-
+    
     // 二つに分割する。
     KeyValue *former_keyvalue_head = node->keyvalue;
     KeyValue *latter_keyvalue_head = mid_keyvalue;
+
     if (node->is_leaf == 1) { //leafの場合はchildに自身を含まない。上位のleafに結合するだけ。
         latter_keyvalue_head = latter_keyvalue_head->next;
     }
-    spliter->next = NULL; // リストを分割する。formerからlaterを切り離す。
 
+    spliter->next = NULL; // リストを分割する。formerからlaterを切り離す。
 
     Node *new_parent_node = malloc(sizeof(Node));
     Node *new_child_former_node = malloc(sizeof(Node));
     Node *new_child_letter_node = malloc(sizeof(Node));
 
     //init
-    new_parent_node->name = rand();
-    new_child_former_node->name = rand();
-    new_child_letter_node->name = rand();
+    new_parent_node->name = rand()/10000;
+    new_child_former_node->name = rand()/10000;
+    new_child_letter_node->name = rand()/10000;
     new_parent_node->parent = NULL;
     new_parent_node->child = NULL;
+    
 
     new_parent_node->edge_end = 0;
     new_child_former_node->edge_end = 0;
@@ -533,6 +532,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     if (node->next != NULL) {
         node->next->prev = new_child_letter_node;
         new_child_letter_node->next = node->next;
+        new_child_letter_node->link = node->next;
 
         if (node->is_leaf == 0) {
             new_child_letter_node->leaf_conn = node->next;
@@ -622,10 +622,10 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         Node *previous_parent = node->parent;
 
         //ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
-        Node* removed_node = removeNode(node->parent->child, node);
-        if (removed_node != NULL) {
-            node->parent->child = removed_node;
-        }
+        // Node* removed_node = removeNode(node->parent->child, node);
+        // if (removed_node != NULL) {
+        //     node->parent->child = removed_node;
+        // }
         node->parent = NULL;
         return insert_node(tree, previous_parent, new_parent_node->keyvalue, new_parent_node->child, 1, node);
     }
@@ -643,7 +643,7 @@ int insert(Tree *tree, int key, int value) {
         node->next = NULL;
         node->prev = NULL;
         node->link = NULL;
-        node->name = rand();
+        node->name = rand()/10000;
         tree->root = node;
     }
     // 木の中に挿入する。
@@ -713,15 +713,21 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    int key_cache[size];
+
     Tree *tree = malloc(sizeof(Tree));
     tree->degree = degree;
     for (int i = 1; i < size + 1; i++)
     {
-        insert(tree, i, i * 2);
+        // int key = rand() / 10000;
+        int key = i;
+        int value = i * 2;
+        insert(tree, key, value);
+        key_cache[i] = key;
     }
     draw_tree(tree);
-    for (int i = -1 * size * 0.1; i < size + size * 0.1; i++) {
-        printf("find (key-> %d): %d\n", i, find(tree, i));
+    for (int i = 1; i < size; i++) {
+        printf("find (key-> %d): %d\n", key_cache[i], find(tree, i));
     }
     return 0;
 }
