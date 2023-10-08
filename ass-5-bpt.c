@@ -412,6 +412,7 @@ int find(Tree *tree, int key) {
 
 
 int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is_backpropagation, Node *from) {
+    printf("insert_node: %d\n", node->name);
     if (node->is_leaf == 1 && is_backpropagation == 0) {
         Node *child_head = node->child; //子ノードの先頭を取得!
         Node *appled_child= child_head;
@@ -427,6 +428,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         if (node->edge_end < kvs->key ) {
             node->edge_end = kvs->key;
         }
+        printf("appled: %d\n", appled_child->name);
         return insert_node(tree, appled_child, kvs, NULL, 0, NULL);
     }
 
@@ -435,7 +437,9 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     int node_kvs_length = kvs_length(node->keyvalue);
 
     node->keyvalue = combineKeyValueStore(node->keyvalue, kvs);
+    // printf("length #1: %d for %d\n", kvs_length(node->keyvalue), kvs->key);
     node->keyvalue = quick_sort(node->keyvalue);
+    // printf("length #2: %d for %d\n", kvs_length(node->keyvalue), kvs->key);
 
     // 対象のノードがあいていた場合
     if (node_kvs_length + 1 < tree->degree ) {
@@ -520,6 +524,11 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
 
         if (node->is_leaf == 0) {
             node->prev->leaf_conn = new_child_former_node;
+        }
+    } else {
+        // 前のノードがなければ、親ノードの子供を更新する。
+        if (node->parent != NULL) {
+            node->parent->child = new_child_former_node;
         }
     }
 
@@ -607,6 +616,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         l_kvs = l_kvs->next;
     }
     new_parent_node->edge_end = max(new_child_former_node->edge_end, new_child_letter_node->edge_end);
+
 
     if (node->parent == NULL) {  // 継承先がルートノードだった場合は、ルートノードを更新する。
         tree->root = new_parent_node;
@@ -716,10 +726,11 @@ int main(int argc, char *argv[]) {
         int key = rand() / 10000;
         // int key = i;
         int value = i * 2;
+        printf("insert (key-> %d, value-> %d)\n", key, value);
         insert(tree, key, value);
         key_cache[i] = key;
+        draw_tree(tree);
     }
-    draw_tree(tree);
     for (int i = 1; i < size; i++) {
         printf("find (key-> %d): %d\n", key_cache[i], find(tree, key_cache[i]));
     }
