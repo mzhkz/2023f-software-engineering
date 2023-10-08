@@ -526,7 +526,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
             node->prev->leaf_conn = new_child_former_node;
         }
     } else {
-        // 前のノードがなければ、親ノードの子供を更新する。
         if (node->parent != NULL) {
             node->parent->child = new_child_former_node;
         }
@@ -723,8 +722,8 @@ int main(int argc, char *argv[]) {
     tree->degree = degree;
     for (int i = 1; i < size + 1; i++)
     {
-        int key = rand() / 10000;
-        // int key = i;
+        // int key = rand() / 10000;
+        int key = i;
         int value = i * 2;
         printf("insert (key-> %d, value-> %d)\n", key, value);
         insert(tree, key, value);
