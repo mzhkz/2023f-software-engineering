@@ -720,7 +720,7 @@ int main(int argc, char *argv[]) {
         insert(tree, i, i * 2);
     }
     draw_tree(tree);
-    for (int i = -5; i < size * 2; i++) {
+    for (int i = -1 * size * 0.1; i < size + size * 0.1; i++) {
         printf("find (key-> %d): %d\n", i, find(tree, i));
     }
     return 0;
