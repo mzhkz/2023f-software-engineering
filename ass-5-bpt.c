@@ -383,17 +383,16 @@ int delete(Tree *tree, int key) {
     return delete_from_node(tree, tree->root, key, 0, NULL);
 }
 
-
 int find_node(Tree *tree, Node *node, int key) {
     if (node->is_leaf == 1) {
         Node *child_head = node->child; //子ノードの先頭を取得!
         Node *appled_child = child_head;
         int is_former = key < node->keyvalue->key;
-        int border = 0;
+        int border = -1;
         while (child_head != NULL)
         {
             // 子ノードの先頭のキーが挿入するキーより小さい場合は、そこに置く。
-            if (border <= key && key <= child_head->edge_end) {
+            if (border < key && key <= child_head->edge_end) {
                  appled_child = child_head;
                  break;
             }
@@ -403,12 +402,7 @@ int find_node(Tree *tree, Node *node, int key) {
         // 子ノードに橋渡し
         return find_node(tree, appled_child, key);
     } else {
-        int result = search_key(node->keyvalue, key);
-        // leaf node 次の子のノードに橋渡し
-        if (result == -1 && node->leaf_conn != NULL) {
-             return find_node(tree, node->leaf_conn, key);
-        }
-        return result;
+        return search_key(node->keyvalue, key);
     }
 }
 
@@ -719,15 +713,15 @@ int main(int argc, char *argv[]) {
     tree->degree = degree;
     for (int i = 1; i < size + 1; i++)
     {
-        // int key = rand() / 10000;
-        int key = i;
+        int key = rand() / 10000;
+        // int key = i;
         int value = i * 2;
         insert(tree, key, value);
         key_cache[i] = key;
     }
     draw_tree(tree);
     for (int i = 1; i < size; i++) {
-        printf("find (key-> %d): %d\n", key_cache[i], find(tree, i));
+        printf("find (key-> %d): %d\n", key_cache[i], find(tree, key_cache[i]));
     }
     return 0;
 }
