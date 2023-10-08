@@ -405,11 +405,9 @@ int find_node(Tree *tree, Node *node, int key) {
             border = child_head->edge_end;
             child_head = child_head->next;
         }
-        printf("appled: %d\n", appled_child->name);
         // 子ノードに橋渡し
         return find_node(tree, appled_child, key);
     } else {
-        printf("get: %d\n", node->keyvalue->key);
         return search_key(node->keyvalue, key);
     }
 }
@@ -420,7 +418,6 @@ int find(Tree *tree, int key) {
 
 
 int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is_backpropagation, Node *from) {
-    printf("insert_node: %d\n", node->name);
     if (node->is_leaf == 1 && is_backpropagation == 0) {
         Node *child_head = node->child; //子ノードの先頭を取得!
         Node *appled_child= child_head;
@@ -436,7 +433,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         if (node->edge_end < kvs->key ) {
             node->edge_end = kvs->key;
         }
-        printf("appled: %d\n", appled_child->name);
         return insert_node(tree, appled_child, kvs, NULL, 0, NULL);
     }
 
@@ -446,6 +442,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
 
     node->keyvalue = combineKeyValueStore(node->keyvalue, kvs);
     node->keyvalue = quick_sort(node->keyvalue);
+
 
     // 対象のノードがあいていた場合
     if (node_kvs_length + 1 < tree->degree ) {
@@ -464,6 +461,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         return 1;
     }
 
+
     // 対象のノードがいっぱいだった場合
     int mid_index = (node_kvs_length+1) / 2; //new_edgeを個足したので+1
     if (tree->degree % 2 == 0) {
@@ -480,6 +478,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         temp = temp->next;
         cl++;
     }
+    
     
     // 二つに分割する。
     KeyValue *former_keyvalue_head = node->keyvalue;
@@ -518,6 +517,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
     connectNodeAsPeer(new_child_former_node, new_child_letter_node);
     connectNodeAsLink(new_child_former_node, new_child_letter_node); //描写用のリンク
     
+    
     if (node->is_leaf == 0) {
         new_child_former_node->leaf_conn = new_child_letter_node;
     }
@@ -538,16 +538,6 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         }
     }
 
-    // if (node->next != NULL) {
-    //     node->next->prev = new_child_letter_node;
-    //     new_child_letter_node->next = node->next;
-    //     new_child_letter_node->link = node->next;
-
-    //     if (node->is_leaf == 0) {
-    //         new_child_letter_node->leaf_conn = node->next;
-    //     }
-    // }
-
     if (node->link != NULL) {
         node->link->prev = new_child_letter_node;
         new_child_letter_node->next = node->next;
@@ -557,14 +547,15 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
             new_child_letter_node->leaf_conn = node->link;
         }
     }
-
+    
     //親子関係を受け継ぐ
-   if (node->is_leaf == 1) {
-        int node_child_length = nodes_length(node->child);
+    int node_child_length = nodes_length(node->child);
+    if (node->is_leaf == 1) {
         int n_mid_index = node_child_length / 2;
         if (tree->degree % 2 == 0) { //偶数の場合
             n_mid_index = (node_child_length + 1) / 2;
         }
+
         Node *n_temp = node->child, *n_spliter = NULL, *mid_child = NULL;
         int ncl = 0;
         while (1) {
@@ -576,6 +567,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
             n_temp = n_temp->next;
             ncl++;
         }
+
 
         Node *former_child_head = node->child;
         Node *latter_child_head = mid_child;
@@ -603,6 +595,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
             l_child = l_child->next;
         }
     }
+
 
 
     // KV for new leaf (new parent)
@@ -642,10 +635,10 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         Node *previous_parent = node->parent;
 
         //ループしちゃうので、一旦外す。nodeのkvsとchildのkvsは同じオブジェクトなので。。
-        Node* removed_node = removeNode(node->parent->child, node);
-        if (removed_node != NULL) {
-            node->parent->child = removed_node;
-        }
+        // Node* removed_node = removeNode(node->parent->child, node);
+        // if (removed_node != NULL) {
+        //     node->parent->child = removed_node;
+        // }
         node->parent = NULL;
         return insert_node(tree, previous_parent, new_parent_node->keyvalue, new_parent_node->child, 1, node);
     }
@@ -680,19 +673,19 @@ void draw_tree(Tree *tree) {
     Node *layer_head = node;
     while (node != NULL) {
         printf(" [ id: %d, ", node->name);
-        // KeyValue *kvs = node->keyvalue;
-        // while (kvs != NULL) {
-        //     if (node->is_leaf == 1) {
-        //         printf(" <key:%d, is_leaf)> ", kvs->key);
-        //     } else {
-        //         printf(" <key:%d, val:%d)> ", kvs->key, kvs->value);
-        //     }
-        //     kvs = kvs->next;
-        // }
-        // Node *peer = node->leaf_conn;
-        // if (peer != NULL) {
-        //     printf(", peer: %d ", peer->name);
-        // }
+        KeyValue *kvs = node->keyvalue;
+        while (kvs != NULL) {
+            if (node->is_leaf == 1) {
+                printf(" <key:%d, is_leaf)> ", kvs->key);
+            } else {
+                printf(" <key:%d, val:%d)> ", kvs->key, kvs->value);
+            }
+            kvs = kvs->next;
+        }
+        Node *peer = node->leaf_conn;
+        if (peer != NULL) {
+            printf(", peer: %d ", peer->name);
+        }
         Node *child = node->child;
         if (child != NULL) {
             printf(", childs:");
@@ -739,8 +732,8 @@ int main(int argc, char *argv[]) {
     tree->degree = degree;
     for (int i = 1; i < size + 1; i++)
     {
-        int key = rand() / 10000;
-        // int key = i;
+        // int key = rand() / 10000;
+        int key = i;
         int value = i * 2;
         printf("insert (key-> %d, value-> %d)\n", key, value);
         insert(tree, key, value);
