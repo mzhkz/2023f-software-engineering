@@ -516,6 +516,7 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         new_child_former_node->leaf_conn = new_child_letter_node;
     }
 
+    //親子関係をつなぐ
     if (node->prev != NULL)
     { // 前のノードがあれば、前のノードとつなぐ。
         node->prev->link = new_child_former_node;
@@ -531,13 +532,23 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         }
     }
 
-    if (node->next != NULL) {
-        node->next->prev = new_child_letter_node;
+    // if (node->next != NULL) {
+    //     node->next->prev = new_child_letter_node;
+    //     new_child_letter_node->next = node->next;
+    //     new_child_letter_node->link = node->next;
+
+    //     if (node->is_leaf == 0) {
+    //         new_child_letter_node->leaf_conn = node->next;
+    //     }
+    // }
+
+    if (node->link != NULL) {
+        node->link->prev = new_child_letter_node;
         new_child_letter_node->next = node->next;
-        new_child_letter_node->link = node->next;
+        new_child_letter_node->link = node->link;
 
         if (node->is_leaf == 0) {
-            new_child_letter_node->leaf_conn = node->next;
+            new_child_letter_node->leaf_conn = node->link;
         }
     }
 
@@ -722,8 +733,8 @@ int main(int argc, char *argv[]) {
     tree->degree = degree;
     for (int i = 1; i < size + 1; i++)
     {
-        // int key = rand() / 10000;
-        int key = i;
+        int key = rand() / 10000;
+        // int key = i;
         int value = i * 2;
         printf("insert (key-> %d, value-> %d)\n", key, value);
         insert(tree, key, value);
