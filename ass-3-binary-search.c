@@ -37,11 +37,18 @@ int kvs_length(KeyValue *kv) {
 
 int binary_search(KeyValue *kv, int key, int start, int end) {
   // リストをキーでソート済みと仮定
+  if (end - start == 0) {
+     if (kv->key == key) {
+        return kv->value; // キーが見つかった場合
+     } else {
+        return -1; // キーが見つからなかった場合
+     }
+  }
   if (start > end) {
       return -1; // キーが見つからなかった場合
   }
   KeyValue *temp = kv, *mid_kv = NULL;
-  int mid = (start + end) / 2;
+  int mid = ((end - start) / 2) + start;
   if (start == end ) {
       mid_kv = kv;
   }

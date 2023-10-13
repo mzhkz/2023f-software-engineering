@@ -70,7 +70,7 @@ int read(KV *kv, int key, int delta) {
     }
     if (cl == pos) {
       if (temp->key == key) {
-        return temp->key;
+        return temp->value;
       }
       pos += delta;
     }
@@ -102,6 +102,7 @@ int main() {
   insert_and_update(head, 4, 2, 3);
   insert_and_update(head, 1, 99, 3);
   print_kv(head);
+  printf("read: %d\n", read(head, 1, 3));
 
   return 0;
 }
