@@ -29,6 +29,7 @@ typedef struct Node
 {
     int name;
     struct Node *next;
+    struct Node *child_conn;
     struct Node *prev;
     struct Node *child;
     struct Node *parent;
@@ -403,7 +404,12 @@ int find_node(Tree *tree, Node *node, int key) {
                  break;
             }
             border = child_head->edge_end;
-            child_head = child_head->next;
+
+            if (child_head->is_leaf == 0) {
+                child_head = child_head->leaf_conn;
+            } else {
+                child_head = child_head->next;
+            }
         }
         // 子ノードに橋渡し
         return find_node(tree, appled_child, key);
@@ -422,12 +428,18 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         Node *child_head = node->child; //子ノードの先頭を取得!
         Node *appled_child= child_head;
         while (child_head != NULL) {
+            printf("head: %d\n", child_head->keyvalue->key);
             if (kvs->key > child_head->keyvalue->key) {
+                printf("hit: %d\n", child_head->keyvalue->key);
                 if (appled_child->edge_end <= child_head->edge_end) {
                     appled_child = child_head;
                 }
             }
-            child_head = child_head->next;
+            if (child_head->is_leaf == 0) {
+                child_head = child_head->leaf_conn;
+            } else {
+                child_head = child_head->next;
+            }
         }
         // 子ノードに橋渡し
         if (node->edge_end < kvs->key ) {
@@ -656,7 +668,8 @@ int insert(Tree *tree, int key, int value) {
         node->next = NULL;
         node->prev = NULL;
         node->link = NULL;
-        node->name = rand()/10000;
+        node->child_conn = NULL;
+        node->name = rand() / 10000;
         tree->root = node;
     }
     // 木の中に挿入する。
@@ -695,7 +708,7 @@ void draw_tree(Tree *tree) {
                 } else {
                     printf("NULL,");
                 }
-                child = child->next;
+                child = child->child_conn;
             }
             printf("");
         }
@@ -732,8 +745,8 @@ int main(int argc, char *argv[]) {
     tree->degree = degree;
     for (int i = 1; i < size + 1; i++)
     {
-        // int key = rand() / 10000;
-        int key = i;
+        int key = rand() / 10000;
+        // int key = size - i;
         int value = i * 2;
         printf("insert (key-> %d, value-> %d)\n", key, value);
         insert(tree, key, value);

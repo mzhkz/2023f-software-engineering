@@ -35,7 +35,7 @@ int kvs_length(KeyValue *kv) {
 }
 
 
-int binary_search(KeyValue *kv, int key, int start, int end) {
+int binary_search(KeyValue *kv, int key, int start, int end, int *step) {
   // リストをキーでソート済みと仮定
   if (end - start == 0) {
      if (kv->key == key) {
@@ -70,24 +70,27 @@ int binary_search(KeyValue *kv, int key, int start, int end) {
       }
   }
 
+  (*step)++;
+
+
   if (mid_kv->key == key) {
     return mid_kv->value; // キーが見つかった場合
   } else if (mid_kv->key < key) {
     // 右側を探索
-    return binary_search(kv, key, mid + 1, end);
+    return binary_search(kv, key, mid + 1, end, step);
   } else {
     // 左側を探索
-    return binary_search(kv, key, start, mid);
+    return binary_search(kv, key, start, mid, step);
   }
 }
 
-int search_key(KeyValue *kv, int key) {
+int search_key(KeyValue *kv, int key, int *step) {
   int length = kvs_length(kv);
-  return binary_search(kv, key, 0, length - 1);
+  return binary_search(kv, key, 0, length - 1, step);
 }
 
 int main() {
-  int size = 100;
+  int size = 10000 * 100;
   KeyValue *kv = malloc(sizeof(KeyValue));
   KeyValue *head = kv;
   for (int i = 0; i < size; i++)
@@ -102,10 +105,11 @@ int main() {
     }
   }
 
-
-  int result = search_key(head, 2);
+  int step = 0;
+  int result = search_key(head, 2, &step);
   printf("### result ###\n");
   printf("%d\n", result);
+  printf("step: %d\n", step);
 
   return 0;
 }
