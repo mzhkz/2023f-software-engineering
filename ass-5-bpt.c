@@ -398,11 +398,13 @@ int find_node(Tree *tree, Node *node, int key) {
         int border = -1;
         while (child_head != NULL)
         {
+            printf("head: %d\n", child_head->name);
             // 子ノードの先頭のキーが挿入するキーより小さい場合は、そこに置く。
             if (border < key && key <= child_head->edge_end) {
                  appled_child = child_head;
                  break;
             }
+            printf("hit: %d\n", child_head->name);
             border = child_head->edge_end;
 
             if (child_head->is_leaf == 0) {
@@ -428,9 +430,9 @@ int insert_node(Tree *tree, Node *node, KeyValue *kvs, Node *childs_head, int is
         Node *child_head = node->child; //子ノードの先頭を取得!
         Node *appled_child= child_head;
         while (child_head != NULL) {
-            printf("head: %d\n", child_head->keyvalue->key);
+            // printf("head: %d\n", child_head->keyvalue->key);
             if (kvs->key > child_head->keyvalue->key) {
-                printf("hit: %d\n", child_head->keyvalue->key);
+                // printf("hit: %d\n", child_head->keyvalue->key);
                 if (appled_child->edge_end <= child_head->edge_end) {
                     appled_child = child_head;
                 }
@@ -708,7 +710,7 @@ void draw_tree(Tree *tree) {
                 } else {
                     printf("NULL,");
                 }
-                child = child->child_conn;
+                child = child->next;
             }
             printf("");
         }
@@ -751,10 +753,11 @@ int main(int argc, char *argv[]) {
         printf("insert (key-> %d, value-> %d)\n", key, value);
         insert(tree, key, value);
         key_cache[i] = key;
-        draw_tree(tree);
     }
-    for (int i = 1; i < size; i++) {
-        printf("find (key-> %d): %d\n", key_cache[i], find(tree, key_cache[i]));
+    for (int i = 1; i < size + 1; i++) {
+        // printf("find (key-> %d): %d\n", key_cache[i], find(tree, key_cache[i]));
     }
+     draw_tree(tree);
+    printf("find (key-> %d): %d\n", 88493, find(tree, 88493));
     return 0;
 }
