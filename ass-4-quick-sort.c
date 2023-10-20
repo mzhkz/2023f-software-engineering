@@ -33,7 +33,6 @@ List* combine(List *p, List *q) {
 
   List *s = p;
 
-  // リストの末尾を見つけるためにループを使う必要はありません
   while (p->next != NULL) {
     p = p->next;
   }
@@ -96,11 +95,11 @@ int main(){
   List *s, *p, *q;
   p = malloc(sizeof(List));
   s = p;
-  int size = 10;
+  int size = 10000 * 1000;
   for (int i = 1; i < size; i++)
   {
     q = malloc(sizeof(List));
-    p->data = size - i;
+    p->data = rand();
     p -> next = q;
     p = q;
   }

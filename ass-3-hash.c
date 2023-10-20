@@ -39,19 +39,19 @@ int insert_and_update(KV *kv, int key, int value, int delta) {
   int lengh = kv_length(kv);
   KV *temp = kv;
   int cl = 0;
-  int pos = key % delta;
+  int pos = key % delta; //挿入するポジションを計算
   while (1)
   {
-    if (cl >lengh) {
+    if (cl >lengh) { //リストの長さを超えたら、挿入失敗
       return -1;
     }
-    if (cl == pos) {
-      if (temp->key == -1 || temp->key == key) {
+    if (cl == pos) { //挿入するポジションに到達したら、挿入
+      if (temp->key == -1 || temp->key == key) { //キーが空の場合、挿入
         temp->key = key;
         temp->value = value;
         return 1;
       }
-      pos += delta;
+      pos += delta; //キーが空でない場合、ポジションをdelta分更新
     }
     temp = temp->next;
     cl++;
@@ -62,17 +62,17 @@ int read(KV *kv, int key, int delta) {
   int lengh = kv_length(kv);
   KV *temp = kv;
   int cl = 0;
-  int pos = key % delta;
+  int pos = key % delta; //挿入されていると思われるポジションを計算
   while (1)
   {
-    if (cl >lengh) {
+    if (cl >lengh) { //リストの長さを超えたら、検索失敗
       return -1;
     }
-    if (cl == pos) {
-      if (temp->key == key) {
+    if (cl == pos) { //挿入されていると思われるポジションに到達したら、キーが一致するか確認
+      if (temp->key == key) { //キーが一致したら、値を返す
         return temp->value;
       }
-      pos += delta;
+      pos += delta; //キーが一致しなかったら、ポジションをdelta分更新
     }
     temp = temp->next;
     cl++;
@@ -80,7 +80,7 @@ int read(KV *kv, int key, int delta) {
 }
 
 int main() {
-  int size = 10;
+  int size = 10; //このサイズを変更することで、Bucketサイズを変更できる。
   KV *kv = malloc(sizeof(KV));
   KV *head = kv;
   for (int i = 0; i < size; i++)

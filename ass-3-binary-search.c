@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 
+
 typedef struct kv {
   int key;
   int value;
@@ -90,6 +91,7 @@ int search_key(KeyValue *kv, int key, int *step) {
 }
 
 int main() {
+  // 100万件のデータを生成
   int size = 10000 * 100;
   KeyValue *kv = malloc(sizeof(KeyValue));
   KeyValue *head = kv;
@@ -105,7 +107,7 @@ int main() {
     }
   }
 
-  int step = 0;
+  int step = 0; //何回目で見つかったか
   int result = search_key(head, 2, &step);
   printf("### result ###\n");
   printf("%d\n", result);
