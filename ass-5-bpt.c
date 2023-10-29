@@ -747,8 +747,8 @@ int main(int argc, char *argv[]) {
     tree->degree = degree;
     for (int i = 1; i < size + 1; i++)
     {
-        int key = rand() / 10000;
-        // int key = size - i;
+        // int key = rand() / 10000;
+        int key = size - i;
         int value = i * 2;
         printf("insert (key-> %d, value-> %d)\n", key, value);
         insert(tree, key, value);

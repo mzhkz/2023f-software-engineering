@@ -48,11 +48,11 @@ List* sort(List *s){
     return NULL;
   }
 
-  List *p = NULL, *p_start = NULL;
-  List *q = NULL, *q_start = NULL;
-  List *t = s->next;
+  List *p = NULL, *p_start = NULL; //後半開始地点
+  List *q = NULL, *q_start = NULL; //前半開始地点
+  List *t = s->next; //検索開始地点
 
-  if (t == NULL)
+  if (t == NULL) //配列サイズが1
   {
     return s;
   }
@@ -65,7 +65,7 @@ List* sort(List *s){
 
     List *next = t->next;
     t->next = NULL;
-    if (s->data >= t->data)
+    if (s->data >= t->data) //一番最初の要素と比べて小さい場合
     {
       if (q == NULL) {
         q = t;
@@ -76,7 +76,7 @@ List* sort(List *s){
         q->next = t;
         q = t;
       }
-    } else {
+    } else { //一番最初の要素と比べて大きい場合
       if (p == NULL) {
         p = t;
         p_start = p;
@@ -88,7 +88,7 @@ List* sort(List *s){
     t = next;
   }
   s->next = NULL;
-  return combine(combine(sort(q_start), s), sort(p_start));
+  return combine(combine(sort(q_start), s), sort(p_start)); //前半部と後半部を結合
 }
 
 int main(){

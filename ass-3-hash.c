@@ -39,7 +39,7 @@ int insert_and_update(KV *kv, int key, int value, int delta) {
   int lengh = kv_length(kv);
   KV *temp = kv;
   int cl = 0;
-  int pos = key % delta; //挿入するポジションを計算
+  int pos = key % lengh; //挿入するポジションを計算
   while (1)
   {
     if (cl >lengh) { //リストの長さを超えたら、挿入失敗
@@ -62,7 +62,7 @@ int read(KV *kv, int key, int delta) {
   int lengh = kv_length(kv);
   KV *temp = kv;
   int cl = 0;
-  int pos = key % delta; //挿入されていると思われるポジションを計算
+  int pos = key % lengh; //挿入されていると思われるポジションを計算
   while (1)
   {
     if (cl >lengh) { //リストの長さを超えたら、検索失敗
