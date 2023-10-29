@@ -46,7 +46,8 @@ int insert_and_update(KV *kv, int key, int value, int delta) {
       return -1;
     }
     if (cl == pos) { //挿入するポジションに到達したら、挿入
-      if (temp->key == -1 || temp->key == key) { //キーが空の場合、挿入
+      if (temp->key == -1) { //キーが空の場合、挿入
+      //  if (temp->key == -1 || temp->key == key) { //キーが空の場合、挿入
         temp->key = key;
         temp->value = value;
         return 1;
